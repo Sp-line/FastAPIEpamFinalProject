@@ -77,5 +77,6 @@ rev = "v1.10.0"
 id = "mypy"
 additional_dependencies = [
     "fastapi",
-    "pydantic"
+    "pydantic",
+    "pydantic-settings"
 ]
