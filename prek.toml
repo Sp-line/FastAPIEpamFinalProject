@@ -79,5 +79,6 @@ additional_dependencies = [
     "fastapi",
     "pydantic",
     "pydantic-settings",
-    "sqlalchemy"
+    "sqlalchemy",
+    "dishka",
 ]
