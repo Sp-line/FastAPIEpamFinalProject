@@ -61,6 +61,10 @@ addopts = [
     "--cov-report=html",
 ]
 
+markers = [
+    "requires_db: tests that require a running PostgreSQL database and testcontainers",
+]
+
 asyncio_mode = "auto"
 asyncio_default_test_loop_scope = "session"
 asyncio_default_fixture_loop_scope = "session"
