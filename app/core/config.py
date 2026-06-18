@@ -1,3 +1,6 @@
+from enum import StrEnum
+from enum import auto
+
 from pydantic import BaseModel
 from pydantic import PostgresDsn
 from pydantic_settings import BaseSettings
@@ -16,6 +19,16 @@ class ApiV1Prefix(BaseModel):
 class ApiPrefix(BaseModel):
     prefix: str = "/api"
     v1: ApiV1Prefix = ApiV1Prefix()
+
+
+class DBDriver(StrEnum):
+    ASYNCPG = auto()
+    PSYCOPG = auto()
+
+
+class TestDBConfig(BaseModel):
+    image: str = "postgres:15-alpine"
+    driver: DBDriver = DBDriver.ASYNCPG
 
 
 class DatabaseConfig(BaseModel):
@@ -37,6 +50,7 @@ class DatabaseConfig(BaseModel):
 class Settings(BaseSettings):
     run: RunConfig = RunConfig()
     api: ApiPrefix = ApiPrefix()
+    test_db: TestDBConfig = TestDBConfig()
     db: DatabaseConfig
 
     model_config = SettingsConfigDict(
