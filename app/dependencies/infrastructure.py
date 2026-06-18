@@ -1,16 +1,10 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from collections.abc import AsyncIterator  # noqa: TC003
 
 from core.models import database
 from dishka import Provider
 from dishka import Scope
 from dishka import provide
-
-if TYPE_CHECKING:
-    from collections.abc import AsyncIterator
-
-    from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession  # noqa: TC002
 
 
 class InfrastructureProvider(Provider):
