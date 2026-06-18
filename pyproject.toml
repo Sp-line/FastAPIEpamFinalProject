@@ -69,6 +69,7 @@ env = [
     "APP_CONFIG__DB__URL=postgresql+asyncpg://fake:fake@localhost:5432/fake",
 ]
 
+xfail_strict = true
 filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::UserWarning",
