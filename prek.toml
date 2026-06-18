@@ -81,4 +81,8 @@ additional_dependencies = [
     "pydantic-settings",
     "sqlalchemy",
     "dishka",
+    "pytest",
+    "pytest-asyncio",
+    "httpx",
+    "testcontainers",
 ]
