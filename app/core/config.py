@@ -2,6 +2,7 @@ from enum import StrEnum
 from enum import auto
 
 from pydantic import BaseModel
+from pydantic import HttpUrl
 from pydantic import PostgresDsn
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
@@ -31,6 +32,10 @@ class TestDBConfig(BaseModel):
     driver: DBDriver = DBDriver.ASYNCPG
 
 
+class TestAPIConfig(BaseModel):
+    base_url: HttpUrl = HttpUrl("http://test")
+
+
 class DatabaseConfig(BaseModel):
     url: PostgresDsn
     echo: bool = False
@@ -51,6 +56,7 @@ class Settings(BaseSettings):
     run: RunConfig = RunConfig()
     api: ApiPrefix = ApiPrefix()
     test_db: TestDBConfig = TestDBConfig()
+    test_api: TestAPIConfig = TestAPIConfig()
     db: DatabaseConfig
 
     model_config = SettingsConfigDict(
