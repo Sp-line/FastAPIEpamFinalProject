@@ -43,8 +43,8 @@ def postgres_url(request: pytest.FixtureRequest) -> Iterator[str]:
 
 @pytest_asyncio.fixture(scope="session", loop_scope="session")
 async def test_engine(
-        postgres_url: str,
-        request: pytest.FixtureRequest,
+    postgres_url: str,
+    request: pytest.FixtureRequest,
 ) -> AsyncIterator[AsyncEngine]:
     if not should_run_db(request):
         pytest.skip(Messages.SKIP_DB_INITIALIZATION)
@@ -103,7 +103,7 @@ async def async_client(test_app: FastAPI) -> AsyncIterator[AsyncClient]:
     transport = ASGITransport(app=test_app)
 
     async with AsyncClient(
-            transport=transport,
-            base_url=str(settings.test_api.base_url),
+        transport=transport,
+        base_url=str(settings.test_api.base_url),
     ) as client:
         yield client
