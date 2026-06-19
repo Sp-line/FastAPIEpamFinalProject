@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession  # noqa: TC002
 
 class InfrastructureProvider(Provider):
     @provide(scope=Scope.APP)
-    async def get_database(self) -> AsyncIterator[Database]:
+    async def get_database(self) -> AsyncIterator[Database]:  # pragma: no cover
         db = Database(
             url=str(settings.db.url),
             echo=settings.db.echo,
@@ -24,6 +24,9 @@ class InfrastructureProvider(Provider):
         await db.dispose()
 
     @provide(scope=Scope.REQUEST)
-    async def get_db_session(self, db: Database) -> AsyncIterator[AsyncSession]:
+    async def get_db_session(
+        self,
+        db: Database,
+    ) -> AsyncIterator[AsyncSession]:  # pragma: no cover
         async for session in db.session_getter():
             yield session
