@@ -66,6 +66,7 @@ types_or = [
     "python",
     "pyi",
 ]
+args = ["--config", "ruff.toml"]
 
 
 [[repos]]
