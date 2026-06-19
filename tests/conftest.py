@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 import pytest_asyncio
-from core.config import settings
 from dishka import Scope
 from dishka import make_async_container
 from dishka import provide
@@ -16,6 +15,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.pool import NullPool
 from testcontainers.postgres import PostgresContainer
 
+from app.core.config import settings
 from app.core.models.base import Base
 from app.dependencies.infrastructure import InfrastructureProvider
 from app.main import app
@@ -43,8 +43,8 @@ def postgres_url(request: pytest.FixtureRequest) -> Iterator[str]:
 
 @pytest_asyncio.fixture(scope="session", loop_scope="session")
 async def test_engine(
-    postgres_url: str,
-    request: pytest.FixtureRequest,
+        postgres_url: str,
+        request: pytest.FixtureRequest,
 ) -> AsyncIterator[AsyncEngine]:
     if not should_run_db(request):
         pytest.skip(Messages.SKIP_DB_INITIALIZATION)
@@ -103,7 +103,7 @@ async def async_client(test_app: FastAPI) -> AsyncIterator[AsyncClient]:
     transport = ASGITransport(app=test_app)
 
     async with AsyncClient(
-        transport=transport,
-        base_url=str(settings.test_api.base_url),
+            transport=transport,
+            base_url=str(settings.test_api.base_url),
     ) as client:
         yield client
