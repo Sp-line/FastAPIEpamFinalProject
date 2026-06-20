@@ -1,9 +1,11 @@
 from enum import StrEnum
 from enum import auto
 
-from pydantic import BaseModel, computed_field, SecretStr
+from pydantic import BaseModel
 from pydantic import HttpUrl
 from pydantic import PostgresDsn
+from pydantic import SecretStr
+from pydantic import computed_field
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
