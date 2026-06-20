@@ -70,7 +70,11 @@ asyncio_default_test_loop_scope = "session"
 asyncio_default_fixture_loop_scope = "session"
 
 env = [
-    "APP_CONFIG__DB__URL=postgresql+asyncpg://fake:fake@localhost:5432/fake",
+    "APP_CONFIG__DB__HOST=localhost",
+    "APP_CONFIG__DB__PORT=5432",
+    "APP_CONFIG__DB__NAME=fake",
+    "APP_CONFIG__DB__USER=fake",
+    "APP_CONFIG__DB__PASSWORD=fake",
 ]
 
 xfail_strict = true
