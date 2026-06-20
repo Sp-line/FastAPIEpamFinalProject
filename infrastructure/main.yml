@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Core Infrastructure: VPC and PostgreSQL RDS'
+Description: 'Core Infrastructure: VPC, PostgreSQL RDS, S3, ECS'
 
 Resources:
   MainVPC:
@@ -20,7 +20,7 @@ Resources:
       VpcId: !Ref MainVPC
       InternetGatewayId: !Ref InternetGateway
 
-  PrivateSubnet1:
+  PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MainVPC
@@ -28,9 +28,9 @@ Resources:
       AvailabilityZone: !Select [ "0", !GetAZs '' ]
       Tags:
         - Key: Name
-          Value: private-subnet-1
+          Value: public-subnet-1
 
-  PrivateSubnet2:
+  PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref MainVPC
@@ -38,7 +38,45 @@ Resources:
       AvailabilityZone: !Select [ "1", !GetAZs '' ]
       Tags:
         - Key: Name
-          Value: private-subnet-2
+          Value: public-subnet-2
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref MainVPC
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  Subnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: PublicRoute
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  Subnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn: PublicRoute
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  ApiSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP traffic to FastAPI
+      VpcId: !Ref MainVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8000
+          CidrIp: 0.0.0.0/0
 
   DBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -54,10 +92,10 @@ Resources:
   DBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
-      DBSubnetGroupDescription: Private subnets for RDS
+      DBSubnetGroupDescription: Subnets for RDS
       SubnetIds:
-        - !Ref PrivateSubnet1
-        - !Ref PrivateSubnet2
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
 
   PostgreSQLDB:
     Type: AWS::RDS::DBInstance
@@ -108,30 +146,16 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-
-  LambdaExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
-
-  ApiSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Allow HTTP traffic to FastAPI
-      VpcId: !Ref MainVPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 8000
-          ToPort: 8000
-          CidrIp: 0.0.0.0/0
+      Policies:
+        - PolicyName: SecretsManagerAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:epam-db-secret-*'
 
   ApiCluster:
     Type: AWS::ECS::Cluster
@@ -142,8 +166,8 @@ Resources:
       RequiresCompatibilities:
         - FARGATE
       NetworkMode: awsvpc
-      Cpu: 256
-      Memory: 512
+      Cpu: 512
+      Memory: 1024
       ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
       ContainerDefinitions:
         - Name: fastapi-container
@@ -159,9 +183,9 @@ Resources:
               Value: epampass
           Secrets:
             - Name: APP_CONFIG__DB__USER
-              ValueFrom: !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:epam-db-secret:username::'
+              ValueFrom: !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:epam-db-secret-MvwpFi:username::'
             - Name: APP_CONFIG__DB__PASSWORD
-              ValueFrom: !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:epam-db-secret:password::'
+              ValueFrom: !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:epam-db-secret-MvwpFi:password::'
 
   ApiService:
     Type: AWS::ECS::Service
@@ -169,12 +193,12 @@ Resources:
       Cluster: !Ref ApiCluster
       TaskDefinition: !Ref ApiTaskDefinition
       LaunchType: FARGATE
-      DesiredCount: 1 #
+      DesiredCount: 1
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           Subnets:
-            - !Ref PrivateSubnet1
+            - !Ref PublicSubnet1
           SecurityGroups:
             - !Ref ApiSecurityGroup
 
