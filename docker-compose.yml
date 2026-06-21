@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     env_file:
       - app/.env
+    environment:
+      - APP_CONFIG__DB__HOST=db
     ports:
       - "8000:8000"
     depends_on:
