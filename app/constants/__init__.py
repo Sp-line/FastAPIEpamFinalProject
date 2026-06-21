@@ -1,9 +1,12 @@
 __all__ = (
     "DocumentLimits",
     "ProjectLimits",
+    "ProjectMemberLimits",
     "RoleType",
     "UserLimits",
 )
+
+from constants.project_member import ProjectMemberLimits
 
 from app.constants.document import DocumentLimits
 from app.constants.project import ProjectLimits
