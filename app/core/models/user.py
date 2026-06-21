@@ -9,17 +9,29 @@ from sqlalchemy.orm import relationship
 
 from app.constants.user import UserLimits
 from app.core.models.base import Base
-from app.core.models.mixins import ObservableMixin
 from app.core.models.mixins.int_id_pk import IntIdPkMixin
+from app.core.models.mixins.observable import ObservableMixin
 
 if TYPE_CHECKING:
     from app.core.models.project import Project
+    from app.core.models.project_member import ProjectMemberAssociation
 
 
 class User(IntIdPkMixin, ObservableMixin, Base):
     username: Mapped[str] = mapped_column(String(UserLimits.USERNAME_MAX), unique=True)
     hashed_password: Mapped[str] = mapped_column(String(UserLimits.HASHED_PASSWORD_MAX))
 
-    projects: Mapped[list[Project]] = relationship(
+    created_projects: Mapped[list[Project]] = relationship(
+        back_populates="creator", cascade="all, delete-orphan"
+    )
+
+    project_associations: Mapped[list[ProjectMemberAssociation]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
+    )
+
+    projects: Mapped[list[Project]] = relationship(
+        secondary="project_member_associations",
+        back_populates="users",
+        viewonly=True,
+        overlaps="project_associations",
     )
