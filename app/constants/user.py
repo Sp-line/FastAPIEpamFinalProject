@@ -4,7 +4,7 @@ class UserLimits:
 
     PASSWORD_MIN: int = 8
     PASSWORD_MAX: int = 128
-    PASSWORD_PATTERN: str = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$"
+    PASSWORD_PATTERN: str = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$"  # noqa: S105
 
     HASHED_PASSWORD_MAX: int = 1024
     HASHED_PASSWORD_MIN: int = 50
