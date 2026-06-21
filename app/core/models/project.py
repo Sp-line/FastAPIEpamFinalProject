@@ -15,6 +15,7 @@ from app.core.models.mixins import IntIdPkMixin
 from app.core.models.mixins import ObservableMixin
 
 if TYPE_CHECKING:
+    from app.core.models.document import Document
     from app.core.models.user import User
 
 
@@ -25,3 +26,7 @@ class Project(IntIdPkMixin, ObservableMixin, Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
 
     user: Mapped[User] = relationship(back_populates="projects")
+
+    documents: Mapped[list[Document]] = relationship(
+        back_populates="project", cascade="all, delete-orphan"
+    )
