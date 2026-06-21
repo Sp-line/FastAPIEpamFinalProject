@@ -1,5 +1,10 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Core Infrastructure: VPC, PostgreSQL RDS, S3, ECS'
+Description: 'Production Infrastructure: VPC, ALB, WAF, NAT, RDS, S3, AutoScaling ECS'
+
+Parameters:
+  DbSecretArn:
+    Type: String
+    Description: "Paste the full ARN of your Secrets Manager secret"
 
 Resources:
   MainVPC:
@@ -10,7 +15,7 @@ Resources:
       EnableDnsHostnames: true
       Tags:
         - Key: Name
-          Value: epam-project-vpc
+          Value: epam-prod-vpc
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
@@ -55,47 +60,135 @@ Resources:
 
   Subnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
-    DependsOn: PublicRoute
     Properties:
       SubnetId: !Ref PublicSubnet1
       RouteTableId: !Ref PublicRouteTable
 
   Subnet2RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
-    DependsOn: PublicRoute
     Properties:
       SubnetId: !Ref PublicSubnet2
       RouteTableId: !Ref PublicRouteTable
 
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MainVPC
+      CidrBlock: 10.0.10.0/24
+      AvailabilityZone: !Select [ "0", !GetAZs '' ]
+      Tags:
+        - Key: Name
+          Value: private-subnet-1
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MainVPC
+      CidrBlock: 10.0.20.0/24
+      AvailabilityZone: !Select [ "1", !GetAZs '' ]
+      Tags:
+        - Key: Name
+          Value: private-subnet-2
+
+  NatGatewayEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayEIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref MainVPC
+
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable
+
+  AlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP traffic from Internet to ALB
+      VpcId: !Ref MainVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
   ApiSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow HTTP traffic to FastAPI
+      GroupDescription: Allow HTTP traffic ONLY from ALB
       VpcId: !Ref MainVPC
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 8000
           ToPort: 8000
-          CidrIp: 0.0.0.0/0
+          SourceSecurityGroupId: !Ref AlbSecurityGroup
 
   DBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow internal PostgreSQL traffic
+      GroupDescription: Allow internal PostgreSQL traffic from API
       VpcId: !Ref MainVPC
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 5432
           ToPort: 5432
-          CidrIp: 10.0.0.0/16
+          SourceSecurityGroupId: !Ref ApiSecurityGroup
+
+  ApiWebACL:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      DefaultAction:
+        Allow: {}
+      Scope: REGIONAL
+      VisibilityConfig:
+        SampledRequestsEnabled: true
+        CloudWatchMetricsEnabled: true
+        MetricName: ApiWebACLMetric
+      Rules:
+        - Name: AWSManagedRulesCommonRuleSet
+          Priority: 0
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesCommonRuleSet
+          OverrideAction:
+            None: {}
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: AWSManagedRulesCommonRuleSetMetric
 
   DBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
-      DBSubnetGroupDescription: Subnets for RDS
+      DBSubnetGroupDescription: Private Subnets for RDS
       SubnetIds:
-        - !Ref PublicSubnet1
-        - !Ref PublicSubnet2
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
 
   PostgreSQLDB:
     Type: AWS::RDS::DBInstance
@@ -134,6 +227,41 @@ Resources:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
 
+  ApiLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      SecurityGroups:
+        - !Ref AlbSecurityGroup
+
+  WebACLAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties:
+      ResourceArn: !Ref ApiLoadBalancer
+      WebACLArn: !GetAtt ApiWebACL.Arn
+
+  ApiTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref MainVPC
+      Port: 8000
+      Protocol: HTTP
+      TargetType: ip
+      HealthCheckPath: /docs
+      HealthCheckIntervalSeconds: 30
+
+  ApiListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ApiLoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ApiTargetGroup
+
   ECSTaskExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -155,7 +283,32 @@ Resources:
                 Action:
                   - secretsmanager:GetSecretValue
                 Resource:
-                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:epam-db-secret-*'
+                  - !Ref DbSecretArn
+
+  ApiTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: S3AppAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource:
+                  - !GetAtt ProjectFilesBucket.Arn
+                  - !Sub '${ProjectFilesBucket.Arn}/*'
 
   ApiCluster:
     Type: AWS::ECS::Cluster
@@ -168,6 +321,7 @@ Resources:
       NetworkMode: awsvpc
       Cpu: 512
       Memory: 1024
+      TaskRoleArn: !GetAtt ApiTaskRole.Arn
       ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
       ContainerDefinitions:
         - Name: fastapi-container
@@ -181,28 +335,66 @@ Resources:
               Value: "5432"
             - Name: APP_CONFIG__DB__NAME
               Value: epampass
+            - Name: APP_CONFIG__S3__BUCKET_NAME
+              Value: !Ref ProjectFilesBucket
+            - Name: APP_CONFIG__S3__REGION
+              Value: !Ref "AWS::Region"
           Secrets:
             - Name: APP_CONFIG__DB__USER
-              ValueFrom: !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:epam-db-secret-MvwpFi:username::'
+              ValueFrom: !Sub '${DbSecretArn}:username::'
             - Name: APP_CONFIG__DB__PASSWORD
-              ValueFrom: !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:epam-db-secret-MvwpFi:password::'
+              ValueFrom: !Sub '${DbSecretArn}:password::'
 
   ApiService:
     Type: AWS::ECS::Service
+    DependsOn: ApiListener
     Properties:
       Cluster: !Ref ApiCluster
       TaskDefinition: !Ref ApiTaskDefinition
       LaunchType: FARGATE
       DesiredCount: 1
+      LoadBalancers:
+        - ContainerName: fastapi-container
+          ContainerPort: 8000
+          TargetGroupArn: !Ref ApiTargetGroup
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: DISABLED
           Subnets:
-            - !Ref PublicSubnet1
+            - !Ref PrivateSubnet1
+            - !Ref PrivateSubnet2
           SecurityGroups:
             - !Ref ApiSecurityGroup
 
+  ApiScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: 5
+      MinCapacity: 1
+      ResourceId: !Join [ '/', [ 'service', !Ref ApiCluster, !GetAtt ApiService.Name ] ]
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+
+  ApiScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: TargetTrackingCpu70
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref ApiScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        TargetValue: 70.0
+
 Outputs:
+  ApplicationUrl:
+    Description: "Public URL of the Application Load Balancer"
+    Value: !Sub 'http://${ApiLoadBalancer.DNSName}/docs'
+  S3BucketName:
+    Description: "Name of the Private S3 Bucket for Project Files"
+    Value: !Ref ProjectFilesBucket
   DatabaseEndpoint:
-    Description: Database URL
+    Description: "Internal RDS Endpoint"
     Value: !GetAtt PostgreSQLDB.Endpoint.Address
