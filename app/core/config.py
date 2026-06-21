@@ -65,12 +65,18 @@ class DatabaseConfig(BaseModel):
         )
 
 
+class S3Config(BaseModel):
+    bucket_name: str
+    region: str
+
+
 class Settings(BaseSettings):
     run: RunConfig = RunConfig()
     api: ApiPrefix = ApiPrefix()
     test_db: TestDBConfig = TestDBConfig()
     test_api: TestAPIConfig = TestAPIConfig()
     db: DatabaseConfig
+    s3: S3Config
 
     model_config = SettingsConfigDict(
         env_file=(".env.template", ".env"),

@@ -75,6 +75,8 @@ env = [
     "APP_CONFIG__DB__NAME=fake",
     "APP_CONFIG__DB__USER=fake",
     "APP_CONFIG__DB__PASSWORD=fake",
+    "APP_CONFIG__S3__BUCKET_NAME=fake",
+    "APP_CONFIG__S3__REGION=fake",
 ]
 
 xfail_strict = true
