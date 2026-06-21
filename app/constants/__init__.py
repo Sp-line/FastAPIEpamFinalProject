@@ -1,6 +1,6 @@
 __all__ = (
-    "ProjectLimits",
     "DocumentLimits",
+    "ProjectLimits",
     "RoleType",
     "UserLimits",
 )
