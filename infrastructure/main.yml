@@ -312,6 +312,8 @@ Resources:
 
   ApiCluster:
     Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: epam-prod-cluster
 
   ApiTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -349,6 +351,7 @@ Resources:
     Type: AWS::ECS::Service
     DependsOn: ApiListener
     Properties:
+      ServiceName: epam-prod-service
       Cluster: !Ref ApiCluster
       TaskDefinition: !Ref ApiTaskDefinition
       LaunchType: FARGATE
