@@ -8,10 +8,10 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 
-from app.constants import DocumentLimits
+from app.constants.document import DocumentLimits
 from app.core.models.base import Base
-from app.core.models.mixins import IntIdPkMixin
-from app.core.models.mixins import ObservableMixin
+from app.core.models.mixins.int_id_pk import IntIdPkMixin
+from app.core.models.mixins.observable import ObservableMixin
 
 if TYPE_CHECKING:
     from app.core.models.project import Project
