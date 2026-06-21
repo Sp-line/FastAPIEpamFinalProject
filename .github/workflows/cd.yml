@@ -1,0 +1,49 @@
+name: CD Pipeline
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  deploy:
+    name: Deploy to AWS ECS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Trigger ECS deployment (Smart Check & Wait)
+        run: |
+          echo "Check cluster status..."
+          
+          CLUSTER_STATUS=$(aws ecs describe-clusters \
+            --clusters epam-prod-cluster \
+            --query "clusters[0].status" \
+            --output text)
+          
+          if [ "$CLUSTER_STATUS" == "ACTIVE" ]; then
+            echo "Cluster active. Start service update..."
+            
+            aws ecs update-service \
+              --cluster epam-prod-cluster \
+              --service epam-prod-service \
+              --force-new-deployment > /dev/null
+              
+            echo "Update command sent! Waiting for ECS to provision new tasks..."
+            echo "(This usually takes 2-5 minutes. Please wait...)"
+            
+            aws ecs wait services-stable \
+              --cluster epam-prod-cluster \
+              --services epam-prod-service
+              
+            echo "Deploy successful and verified! The new version is fully running on the server."
+            
+          else
+            echo "Cluster not active (Status: $CLUSTER_STATUS). Infrastructure deleted."
+            echo "Deploy cancelled. Pipeline ended with error for attention!"
+            exit 1
+          fi
