@@ -1,7 +1,8 @@
 import uvicorn
-from api import router
-from core.config import settings
-from create_app import create
+
+from app.api import router
+from app.core.config import settings
+from app.create_app import create
 
 app = create()
 app.include_router(router)

@@ -1,3 +1,3 @@
 __all__ = ("InfrastructureProvider",)
 
-from dependencies.infrastructure import InfrastructureProvider
+from app.dependencies.infrastructure import InfrastructureProvider

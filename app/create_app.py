@@ -1,7 +1,8 @@
-from dependencies import InfrastructureProvider
 from dishka import make_async_container
 from dishka.integrations.fastapi import setup_dishka as setup_fastapi_dishka
 from fastapi import FastAPI
+
+from app.dependencies import InfrastructureProvider
 
 
 def create() -> FastAPI:

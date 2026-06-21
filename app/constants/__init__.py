@@ -5,7 +5,7 @@ __all__ = (
     "UserLimits",
 )
 
-from constants.document import DocumentLimits
-from constants.project import ProjectLimits
-from constants.role_type import RoleType
-from constants.user import UserLimits
+from app.constants.document import DocumentLimits
+from app.constants.project import ProjectLimits
+from app.constants.role_type import RoleType
+from app.constants.user import UserLimits
