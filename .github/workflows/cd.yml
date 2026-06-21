@@ -1,12 +1,18 @@
 name: CD Pipeline
 
 on:
-  workflow_dispatch: 
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types:
+      - completed
+  workflow_dispatch:
 
 jobs:
   deploy:
     name: Deploy to AWS ECS
     runs-on: ubuntu-latest
+
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
 
     steps:
       - name: Configure AWS credentials
@@ -40,10 +46,11 @@ jobs:
               --cluster epam-prod-cluster \
               --services epam-prod-service
               
-            echo "Deploy successful and verified! The new version is fully running on the server."
+            echo "Deploy successful and verified!"
             
           else
-            echo "Cluster not active (Status: $CLUSTER_STATUS). Infrastructure deleted."
-            echo "Deploy cancelled. Pipeline ended with error for attention!"
-            exit 1
+            echo "Cluster not active (Status: $CLUSTER_STATUS)."
+            echo "The CI pipeline built and stored the image, but the infrastructure is down."
+            echo "Skipping deployment. Pipeline will safely exit without an error."
+            exit 0
           fi
