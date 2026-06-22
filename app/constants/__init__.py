@@ -1,11 +1,15 @@
 __all__ = (
+    "DBDriver",
     "DocumentLimits",
+    "PostgresErrorCode",
     "ProjectLimits",
     "ProjectMemberLimits",
     "RoleType",
     "UserLimits",
 )
 
+from app.constants.db import DBDriver
+from app.constants.db import PostgresErrorCode
 from app.constants.document import DocumentLimits
 from app.constants.project import ProjectLimits
 from app.constants.project_member import ProjectMemberLimits
