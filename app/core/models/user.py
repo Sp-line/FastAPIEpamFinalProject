@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from sqlalchemy import CheckConstraint
 from sqlalchemy import String
+from sqlalchemy import func
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -34,4 +36,15 @@ class User(IntIdPkMixin, ObservableMixin, Base):
         back_populates="users",
         viewonly=True,
         overlaps="project_associations",
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            func.char_length(username) >= UserLimits.USERNAME_MIN,
+            name="check_user_username_min_len",
+        ),
+        CheckConstraint(
+            func.char_length(hashed_password) >= UserLimits.HASHED_PASSWORD_MIN,
+            name="check_user_hashed_password_min_len",
+        ),
     )
