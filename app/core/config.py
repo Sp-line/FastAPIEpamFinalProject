@@ -9,6 +9,8 @@ from pydantic import computed_field
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
+from app.constants.db import DBDriver
+
 
 class RunConfig(BaseModel):
     host: str = "0.0.0.0"  # noqa: S104
@@ -22,11 +24,6 @@ class ApiV1Prefix(BaseModel):
 class ApiPrefix(BaseModel):
     prefix: str = "/api"
     v1: ApiV1Prefix = ApiV1Prefix()
-
-
-class DBDriver(StrEnum):
-    ASYNCPG = auto()
-    PSYCOPG = auto()
 
 
 class TestDBConfig(BaseModel):
