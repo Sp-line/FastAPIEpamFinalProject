@@ -1,11 +1,12 @@
 from collections.abc import AsyncIterator  # noqa: TC003
 
-from core.config import settings
-from core.models.db import Database
 from dishka import Provider
 from dishka import Scope
 from dishka import provide
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: TC002
+
+from app.core.config import settings
+from app.core.models.db import Database
 
 
 class InfrastructureProvider(Provider):

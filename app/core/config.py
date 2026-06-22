@@ -79,7 +79,7 @@ class Settings(BaseSettings):
     s3: S3Config
 
     model_config = SettingsConfigDict(
-        env_file=(".env.template", ".env"),
+        env_file=("app/.env.template", "app/.env"),
         case_sensitive=False,
         env_nested_delimiter="__",
         env_prefix="APP_CONFIG__",
