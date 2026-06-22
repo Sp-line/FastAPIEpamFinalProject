@@ -5,7 +5,10 @@ Revises: b903a6219ef2
 Create Date: 2026-06-21 19:54:57.840394
 
 """
-from collections.abc import Sequence
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
