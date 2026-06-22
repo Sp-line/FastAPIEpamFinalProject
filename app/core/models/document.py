@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from sqlalchemy import CheckConstraint
 from sqlalchemy import ForeignKey
 from sqlalchemy import String
+from sqlalchemy import func
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
@@ -26,3 +28,14 @@ class Document(IntIdPkMixin, ObservableMixin, Base):
     )
 
     project: Mapped[Project] = relationship(back_populates="documents")
+
+    __table_args__ = (
+        CheckConstraint(
+            func.char_length(original_name) >= DocumentLimits.ORIGINAL_NAME_MIN,
+            name="check_document_original_name_min_len",
+        ),
+        CheckConstraint(
+            func.char_length(s3_key) >= DocumentLimits.S3_KEY_MIN,
+            name="check_document_s3_key_min_len",
+        ),
+    )
