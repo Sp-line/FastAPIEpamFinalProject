@@ -70,6 +70,28 @@ class S3Config(BaseModel):
     region: str
 
 
+class JWTAlgorithm(StrEnum):
+    @staticmethod
+    def _generate_next_value_(
+        name: str,
+        _start: int,
+        _count: int,
+        _last_values: list[str],
+    ) -> str:
+        return name
+
+    HS256 = auto()
+    HS384 = auto()
+    HS512 = auto()
+    RS256 = auto()
+
+
+class AuthConfig(BaseModel):
+    secret: SecretStr
+    algorithm: JWTAlgorithm = JWTAlgorithm.HS256
+    lifetime_seconds: int = 60 * 60
+
+
 class Settings(BaseSettings):
     run: RunConfig = RunConfig()
     api: ApiPrefix = ApiPrefix()
@@ -77,6 +99,7 @@ class Settings(BaseSettings):
     test_api: TestAPIConfig = TestAPIConfig()
     db: DatabaseConfig
     s3: S3Config
+    auth: AuthConfig
 
     model_config = SettingsConfigDict(
         env_file=("app/.env.template", "app/.env"),
