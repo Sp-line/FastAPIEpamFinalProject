@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from app.dependencies import InfrastructureProvider
 from app.dependencies import RepositoryProvider
 from app.dependencies import ServiceProvider
+from app.dependencies import UsagesProvider
 
 
 def create() -> FastAPI:
@@ -14,6 +15,7 @@ def create() -> FastAPI:
         InfrastructureProvider(),
         RepositoryProvider(),
         ServiceProvider(),
+        UsagesProvider(),
     )
 
     setup_fastapi_dishka(container, app)
