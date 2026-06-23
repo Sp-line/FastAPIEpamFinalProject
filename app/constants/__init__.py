@@ -1,6 +1,7 @@
 __all__ = (
     "DBDriver",
     "DocumentLimits",
+    "JWTAlgorithm",
     "PostgresErrorCode",
     "ProjectLimits",
     "ProjectMemberLimits",
@@ -8,6 +9,7 @@ __all__ = (
     "UserLimits",
 )
 
+from app.constants.auth import JWTAlgorithm
 from app.constants.db import DBDriver
 from app.constants.db import PostgresErrorCode
 from app.constants.document import DocumentLimits
