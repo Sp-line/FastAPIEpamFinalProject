@@ -86,4 +86,5 @@ additional_dependencies = [
     "pytest-asyncio",
     "httpx",
     "testcontainers",
+    "bcrypt"
 ]
