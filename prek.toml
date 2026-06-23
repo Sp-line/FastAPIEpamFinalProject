@@ -88,4 +88,5 @@ additional_dependencies = [
     "testcontainers",
     "bcrypt",
     "pyjwt",
+    "polyfactory",
 ]
