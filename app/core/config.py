@@ -1,6 +1,3 @@
-from enum import StrEnum
-from enum import auto
-
 from pydantic import BaseModel
 from pydantic import HttpUrl
 from pydantic import PostgresDsn
@@ -9,6 +6,7 @@ from pydantic import computed_field
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
+from app.constants.auth import JWTAlgorithm
 from app.constants.db import DBDriver
 
 
@@ -66,22 +64,6 @@ class DatabaseConfig(BaseModel):
 class S3Config(BaseModel):
     bucket_name: str
     region: str
-
-
-class JWTAlgorithm(StrEnum):
-    @staticmethod
-    def _generate_next_value_(
-        name: str,
-        _start: int,
-        _count: int,
-        _last_values: list[str],
-    ) -> str:
-        return name
-
-    HS256 = auto()
-    HS384 = auto()
-    HS512 = auto()
-    RS256 = auto()
 
 
 class AuthConfig(BaseModel):
