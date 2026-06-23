@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from exceptions.db import ObjectNotFoundError
+
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
@@ -41,6 +43,13 @@ class UserService(
             db_update_schema=UserUpdateDB,
         )
         self._password_service = password_service
+
+    async def get_by_username(self, username: str) -> UserRead:
+        if not (obj := await self._repository.get_by_username(username)):
+            raise ObjectNotFoundError(
+                conditions={"username": username}, table_name=self._table_name
+            )
+        return self._read_schema.model_validate(obj)
 
     def _create_data_transfer(self, data: UserCreateReq) -> UserCreateDB:
         hashed_password = self._password_service.get_password_hash(data.password)
