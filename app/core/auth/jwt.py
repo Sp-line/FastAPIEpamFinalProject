@@ -28,7 +28,9 @@ class JWTService:
         payload: JWTPayload,
         lifetime_seconds: int | None = None,
     ) -> str:
-        token_lifetime = lifetime_seconds or self.lifetime_seconds
+        token_lifetime = (
+            lifetime_seconds if lifetime_seconds is not None else self.lifetime_seconds
+        )
 
         payload.exp = datetime.now(UTC) + timedelta(seconds=token_lifetime)
 
