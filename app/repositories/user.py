@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: TC002
 
 from app.core.models.user import User
@@ -20,3 +21,8 @@ class UserRepository(
             session=session,
             table_error_handler=users_error_handler,
         )
+
+    async def get_by_username(self, username: str) -> User | None:
+        stmt = select(self._model).where(self._model.username == username)
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
