@@ -21,6 +21,7 @@ from app.dependencies.infrastructure import InfrastructureProvider
 from app.main import app
 from tests.constants import Messages
 from tests.support import should_run_db
+from tests.support.dummy_model import DummyModel  # noqa: F401
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
