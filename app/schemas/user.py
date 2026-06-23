@@ -1,0 +1,59 @@
+from typing import Annotated
+
+from annotated_types import MaxLen
+from annotated_types import MinLen
+from pydantic import AfterValidator
+from pydantic import BaseModel
+from pydantic import ConfigDict
+from pydantic import Field
+from pydantic import SecretStr
+
+from app.constants.user import UserLimits
+from app.schemas.base import Id
+from app.utils.password_validator import validate_password_strength
+
+type PasswordStr = Annotated[
+    SecretStr,
+    Field(min_length=UserLimits.PASSWORD_MIN, max_length=UserLimits.PASSWORD_MAX),
+    AfterValidator(validate_password_strength),
+]
+
+
+class UserBase(BaseModel):
+    username: Annotated[
+        str, MinLen(UserLimits.USERNAME_MIN), MaxLen(UserLimits.USERNAME_MAX)
+    ]
+
+
+class UserCreateReq(UserBase):
+    password: PasswordStr
+
+
+class UserCreateDB(UserBase):
+    hashed_password: Annotated[
+        str,
+        MinLen(UserLimits.HASHED_PASSWORD_MIN),
+        MaxLen(UserLimits.HASHED_PASSWORD_MAX),
+    ]
+
+
+class UserRead(UserBase, Id):
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserUpdateBase(BaseModel):
+    username: Annotated[
+        str | None, MinLen(UserLimits.USERNAME_MIN), MaxLen(UserLimits.USERNAME_MAX)
+    ] = None
+
+
+class UserUpdateReq(UserUpdateBase):
+    password: PasswordStr | None = None
+
+
+class UserUpdateDB(UserUpdateBase):
+    hashed_password: Annotated[
+        str | None,
+        MinLen(UserLimits.HASHED_PASSWORD_MIN),
+        MaxLen(UserLimits.HASHED_PASSWORD_MAX),
+    ] = None
