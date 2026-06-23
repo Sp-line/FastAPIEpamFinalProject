@@ -97,20 +97,25 @@ class CommandRepositoryBase[
             return []
 
         update_data: list[dict[str, Any]] = []
+        updated_ids: list[int] = []
 
         for obj_id, schema in data.items():
             data_dict = schema.model_dump(exclude_unset=True)
             if data_dict:
                 data_dict["id"] = obj_id
                 update_data.append(data_dict)
+                updated_ids.append(obj_id)
 
         if not update_data:
             return []
 
-        stmt = update(self._model).returning(self._model)
+        stmt = update(self._model)
 
         try:
-            result = await self._session.scalars(stmt, update_data)
+            await self._session.execute(stmt, update_data)
+
+            select_stmt = select(self._model).where(self._model.id.in_(updated_ids))
+            result = await self._session.scalars(select_stmt)
         except IntegrityError as e:
             self._table_error_handler.handle(e)
             raise
