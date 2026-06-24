@@ -7,16 +7,28 @@ from pydantic import SecretStr
 
 from app.constants.auth import JWTAlgorithm
 from app.core.auth.jwt import JWTService
+from app.exceptions.auth import TokenExpiredError
+from app.exceptions.auth import TokenInvalidError
 from app.schemas.token import JWTPayload
 
 
 @pytest.fixture
-def jwt_service() -> JWTService:
+def jwt_secret() -> str:
+    return "super_secret_test_key_for_jwt_123!"
+
+
+@pytest.fixture
+def jwt_service(jwt_secret: str) -> JWTService:
     return JWTService(
-        secret=SecretStr("super_secret_test_key_for_jwt_123"),
+        secret=SecretStr(jwt_secret),
         algorithm=JWTAlgorithm.HS256,
         lifetime_seconds=3600,
     )
+
+
+@pytest.fixture
+def valid_payload() -> JWTPayload:
+    return JWTPayload(sub="42")
 
 
 @pytest.mark.parametrize(
@@ -102,3 +114,86 @@ def test_create_access_token_uses_correct_algorithm_header(
     header = jwt.get_unverified_header(token)
     assert header["alg"] == jwt_service.algorithm.value
     assert header["typ"] == "JWT"
+
+
+def test_verify_access_token_returns_payload_on_valid_token(
+    jwt_service: JWTService,
+    valid_payload: JWTPayload,
+) -> None:
+    token = jwt_service.create_access_token(valid_payload)
+
+    result = jwt_service.verify_access_token(token)
+
+    assert isinstance(result, JWTPayload)
+    assert result.sub == "42"
+
+
+def test_verify_access_token_raises_expired_error_on_expired_token(
+    jwt_service: JWTService,
+    valid_payload: JWTPayload,
+) -> None:
+    token = jwt_service.create_access_token(valid_payload, lifetime_seconds=-10)
+
+    with pytest.raises(TokenExpiredError):
+        jwt_service.verify_access_token(token)
+
+
+def test_verify_access_token_raises_invalid_error_on_tampered_signature(
+    jwt_service: JWTService,
+    valid_payload: JWTPayload,
+) -> None:
+    valid_token = jwt_service.create_access_token(valid_payload)
+    bad_token = valid_token[:-1] + ("A" if valid_token[-1] != "A" else "B")
+
+    with pytest.raises(TokenInvalidError):
+        jwt_service.verify_access_token(bad_token)
+
+
+def test_verify_access_token_raises_invalid_error_on_wrong_secret(
+    jwt_service: JWTService,
+) -> None:
+    bad_token = jwt.encode(
+        payload={"sub": "42"},
+        key="completely_wrong_secret_key_for_this_test",
+        algorithm=jwt_service.algorithm.value,
+    )
+
+    with pytest.raises(TokenInvalidError):
+        jwt_service.verify_access_token(bad_token)
+
+
+def test_verify_access_token_raises_invalid_error_on_wrong_algorithm(
+    jwt_service: JWTService,
+    jwt_secret: str,
+) -> None:
+    bad_token = jwt.encode(
+        payload={"sub": "42"},
+        key=jwt_secret,
+        algorithm="HS512",
+    )
+
+    with pytest.raises(TokenInvalidError):
+        jwt_service.verify_access_token(bad_token)
+
+
+def test_verify_access_token_raises_invalid_error_on_missing_sub_claim(
+    jwt_service: JWTService,
+    jwt_secret: str,
+) -> None:
+    bad_token = jwt.encode(
+        payload={"role": "admin", "username": "hacker"},
+        key=jwt_secret,
+        algorithm=jwt_service.algorithm.value,
+    )
+
+    with pytest.raises(TokenInvalidError):
+        jwt_service.verify_access_token(bad_token)
+
+
+def test_verify_access_token_raises_invalid_error_on_malformed_string(
+    jwt_service: JWTService,
+) -> None:
+    bad_token = "not.a_real.jwt_token"  # noqa: S105
+
+    with pytest.raises(TokenInvalidError):
+        jwt_service.verify_access_token(bad_token)
