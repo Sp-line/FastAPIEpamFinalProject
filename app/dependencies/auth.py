@@ -11,10 +11,14 @@ from app.core.auth.jwt import JWTService  # noqa: TC001
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/login")
 
 
+def extract_user_id_from_token(token: str, jwt_service: JWTService) -> PositiveInt:
+    payload = jwt_service.verify_access_token(token)
+    return int(payload.sub)
+
+
 @inject
-async def get_current_user_id(
+def get_current_user_id(
     token: Annotated[str, Depends(oauth2_scheme)],
     jwt_service: FromDishka[JWTService],
 ) -> PositiveInt:
-    payload = jwt_service.verify_access_token(token)
-    return int(payload.sub)
+    return extract_user_id_from_token(token, jwt_service)
