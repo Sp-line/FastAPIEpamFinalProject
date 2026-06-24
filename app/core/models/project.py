@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 class Project(IntIdPkMixin, ObservableMixin, Base):
     name: Mapped[str] = mapped_column(String(ProjectLimits.NAME_MAX))
-    description: Mapped[str] = mapped_column(Text)
+    description: Mapped[str | None] = mapped_column(Text)
 
     creator_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
 
