@@ -94,12 +94,12 @@ class CommandServiceBase[
                 raise ObjectNotFoundError(obj_id=obj_id, table_name=self._table_name)
 
     def _create_data_transfer(self, data: TCreateSchema) -> TDBCreateSchema:
-        return self._db_create_schema.model_validate(data)
+        return self._db_create_schema(**data.model_dump())
 
     def _bulk_create_data_transfer(
         self, data: Iterable[TCreateSchema]
     ) -> list[TDBCreateSchema]:
-        return [self._db_create_schema.model_validate(obj) for obj in data]
+        return [self._db_create_schema(**obj.model_dump()) for obj in data]
 
     def _update_data_transfer(self, data: TUpdateSchema) -> TDBUpdateSchema:
         return self._db_update_schema(**data.model_dump(exclude_unset=True))
