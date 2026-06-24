@@ -1,15 +1,15 @@
 from datetime import UTC
 from datetime import datetime
 from datetime import timedelta
-from typing import TYPE_CHECKING
 
 import jwt
-from pydantic import SecretStr  # noqa: TC002
+from pydantic import SecretStr
+from pydantic import ValidationError
 
 from app.constants.auth import JWTAlgorithm  # noqa: TC001
-
-if TYPE_CHECKING:
-    from app.schemas.token import JWTPayload
+from app.exceptions.auth import TokenExpiredError
+from app.exceptions.auth import TokenInvalidError
+from app.schemas.token import JWTPayload
 
 
 class JWTService:
@@ -39,3 +39,17 @@ class JWTService:
             key=self.secret.get_secret_value(),
             algorithm=self.algorithm,
         )
+
+    def verify_access_token(self, token: str) -> JWTPayload:
+        try:
+            decoded_data = jwt.decode(
+                jwt=token,
+                key=self.secret.get_secret_value(),
+                algorithms=[self.algorithm],
+            )
+            return JWTPayload.model_validate(decoded_data)
+
+        except jwt.ExpiredSignatureError:
+            raise TokenExpiredError from None
+        except jwt.InvalidTokenError, ValidationError:
+            raise TokenInvalidError from None
