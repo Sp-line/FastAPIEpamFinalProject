@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from exceptions.db import ObjectNotFoundError
+from app.exceptions.db import ObjectNotFoundError
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
