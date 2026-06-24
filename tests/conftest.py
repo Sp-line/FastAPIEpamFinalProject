@@ -18,6 +18,9 @@ from testcontainers.postgres import PostgresContainer
 from app.core.config import settings
 from app.core.models.base import Base
 from app.dependencies.infrastructure import InfrastructureProvider
+from app.dependencies.repositories import RepositoryProvider
+from app.dependencies.services import ServiceProvider
+from app.dependencies.usages import UsagesProvider
 from app.main import app
 from tests.constants import Messages
 from tests.support import should_run_db
@@ -90,6 +93,9 @@ async def test_app(db_session: AsyncSession) -> AsyncIterator[FastAPI]:
 
     test_container = make_async_container(
         TestInfrastructureProvider(),
+        RepositoryProvider(),
+        ServiceProvider(),
+        UsagesProvider(),
     )
 
     app.state.dishka_container = test_container
@@ -103,8 +109,13 @@ async def test_app(db_session: AsyncSession) -> AsyncIterator[FastAPI]:
 async def async_client(test_app: FastAPI) -> AsyncIterator[AsyncClient]:
     transport = ASGITransport(app=test_app)
 
+    base_url = (
+        f"{str(settings.test_api.base_url).rstrip('/')}"
+        f"{settings.api.prefix}{settings.api.v1.prefix}"
+    )
+
     async with AsyncClient(
         transport=transport,
-        base_url=str(settings.test_api.base_url),
+        base_url=base_url,
     ) as client:
         yield client
