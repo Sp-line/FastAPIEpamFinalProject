@@ -1,6 +1,3 @@
-from enum import StrEnum
-from enum import auto
-
 from pydantic import BaseModel
 from pydantic import HttpUrl
 from pydantic import PostgresDsn
@@ -8,6 +5,9 @@ from pydantic import SecretStr
 from pydantic import computed_field
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
+
+from app.constants.auth import JWTAlgorithm
+from app.constants.db import DBDriver
 
 
 class RunConfig(BaseModel):
@@ -17,16 +17,12 @@ class RunConfig(BaseModel):
 
 class ApiV1Prefix(BaseModel):
     prefix: str = "/v1"
+    auth: str = "/auth"
 
 
 class ApiPrefix(BaseModel):
     prefix: str = "/api"
     v1: ApiV1Prefix = ApiV1Prefix()
-
-
-class DBDriver(StrEnum):
-    ASYNCPG = auto()
-    PSYCOPG = auto()
 
 
 class TestDBConfig(BaseModel):
@@ -70,6 +66,12 @@ class S3Config(BaseModel):
     region: str
 
 
+class AuthConfig(BaseModel):
+    secret: SecretStr
+    algorithm: JWTAlgorithm = JWTAlgorithm.HS256
+    lifetime_seconds: int = 60 * 60
+
+
 class Settings(BaseSettings):
     run: RunConfig = RunConfig()
     api: ApiPrefix = ApiPrefix()
@@ -77,6 +79,7 @@ class Settings(BaseSettings):
     test_api: TestAPIConfig = TestAPIConfig()
     db: DatabaseConfig
     s3: S3Config
+    auth: AuthConfig
 
     model_config = SettingsConfigDict(
         env_file=("app/.env.template", "app/.env"),

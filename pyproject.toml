@@ -6,10 +6,13 @@ requires-python = ">=3.14"
 dependencies = [
     "alembic>=1.18.4",
     "asyncpg>=0.31.0",
+    "bcrypt>=5.0.0",
     "dishka>=1.10.1",
     "fastapi>=0.136.1",
     "pydantic-settings>=2.14.1",
     "pydantic[email]>=2.13.4",
+    "pyjwt>=2.13.0",
+    "python-multipart>=0.0.32",
     "sqlalchemy[asyncio]>=2.0.49",
     "uvicorn[standard]>=0.47.0",
 ]
@@ -18,6 +21,7 @@ dependencies = [
 dev = [
     "httpx>=0.28.1",
     "mypy>=2.1.0",
+    "polyfactory>=3.3.0",
     "prek>=0.4.1",
     "pytest>=9.1.0",
     "pytest-asyncio>=1.4.0",
@@ -77,6 +81,7 @@ env = [
     "APP_CONFIG__DB__PASSWORD=fake",
     "APP_CONFIG__S3__BUCKET_NAME=fake",
     "APP_CONFIG__S3__REGION=fake",
+    "APP_CONFIG__AUTH__SECRET=super_secret_test_key_only_for_ci_cd",
 ]
 
 xfail_strict = true
