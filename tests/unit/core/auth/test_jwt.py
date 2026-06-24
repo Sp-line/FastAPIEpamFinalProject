@@ -143,7 +143,10 @@ def test_verify_access_token_raises_invalid_error_on_tampered_signature(
     valid_payload: JWTPayload,
 ) -> None:
     valid_token = jwt_service.create_access_token(valid_payload)
-    bad_token = valid_token[:-1] + ("A" if valid_token[-1] != "A" else "B")
+
+    header, payload, signature = valid_token.split(".")
+
+    bad_token = f"{header}.{payload}.{signature}invalid"
 
     with pytest.raises(TokenInvalidError):
         jwt_service.verify_access_token(bad_token)
