@@ -8,3 +8,5 @@ class AuthErrorMessage(StrEnum):
         "Password must contain at least one lowercase letter, "
         "one uppercase letter, and one number."
     )
+    TOKEN_EXPIRED = "Token has expired."
+    TOKEN_INVALID = "Token is invalid or corrupted."
