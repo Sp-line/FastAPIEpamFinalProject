@@ -2,6 +2,7 @@ from dishka import Provider
 from dishka import Scope
 from dishka import provide
 
+from app.repositories.project import ProjectRepository
 from app.repositories.unit_of_work import UnitOfWork
 from app.repositories.user import UserRepository
 
@@ -12,3 +13,5 @@ class RepositoryProvider(Provider):
     get_uow = provide(UnitOfWork)
 
     get_user_repo = provide(UserRepository)
+
+    get_project_repo = provide(ProjectRepository)
