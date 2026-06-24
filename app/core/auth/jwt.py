@@ -4,11 +4,11 @@ from datetime import timedelta
 from typing import TYPE_CHECKING
 
 import jwt
+from pydantic import SecretStr  # noqa: TC002
+
+from app.constants.auth import JWTAlgorithm  # noqa: TC001
 
 if TYPE_CHECKING:
-    from pydantic import SecretStr
-
-    from app.constants.auth import JWTAlgorithm
     from app.schemas.token import JWTPayload
 
 
