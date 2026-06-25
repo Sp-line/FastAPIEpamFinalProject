@@ -6,7 +6,6 @@ from pydantic import SecretStr
 
 from app.core.auth.password import PasswordService
 from app.exceptions.db import ObjectNotFoundError
-from app.repositories.unit_of_work import UnitOfWork
 from app.repositories.user import UserRepository
 from app.schemas.user import UserCreateDB
 from app.schemas.user import UserCreateReq
@@ -23,11 +22,6 @@ def mock_user_repo() -> MagicMock:
     repo = MagicMock(spec=UserRepository)
     repo.get_by_username = AsyncMock()
     return repo
-
-
-@pytest.fixture
-def mock_uow() -> MagicMock:
-    return MagicMock(spec=UnitOfWork)
 
 
 @pytest.fixture

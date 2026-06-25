@@ -10,7 +10,6 @@ from pydantic import SecretStr
 from app.constants.auth import JWTAlgorithm
 from app.core.auth.jwt import JWTService
 from app.core.auth.password import PasswordService
-from app.repositories.unit_of_work import UnitOfWork
 from app.repositories.user import UserRepository
 from app.schemas.token import JWTPayload
 from app.usages.users.login import UserLoginUsage
@@ -47,14 +46,6 @@ def mock_user_repo() -> MagicMock:
     repo = MagicMock(spec=UserRepository)
     repo.get_by_username = AsyncMock()
     return repo
-
-
-@pytest.fixture
-def mock_uow() -> MagicMock:
-    uow = MagicMock(spec=UnitOfWork)
-    uow.__aenter__ = AsyncMock(return_value=uow)
-    uow.__aexit__ = AsyncMock(return_value=None)
-    return uow
 
 
 @pytest.fixture

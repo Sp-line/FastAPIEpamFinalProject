@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
 
 import pytest
 import pytest_asyncio
@@ -22,6 +24,7 @@ from app.dependencies.repositories import RepositoryProvider
 from app.dependencies.services import ServiceProvider
 from app.dependencies.usages import UsagesProvider
 from app.main import app
+from app.repositories.unit_of_work import UnitOfWork
 from tests.constants import Messages
 from tests.support import should_run_db
 from tests.support.dummy_model import DummyModel  # noqa: F401
@@ -31,6 +34,14 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
     from fastapi import FastAPI
+
+
+@pytest.fixture
+def mock_uow() -> MagicMock:
+    uow = MagicMock(spec=UnitOfWork)
+    uow.__aenter__ = AsyncMock(return_value=uow)
+    uow.__aexit__ = AsyncMock(return_value=None)
+    return uow
 
 
 @pytest.fixture(scope="session")
