@@ -78,3 +78,10 @@ def form_data() -> OAuth2PasswordRequestForm:
         client_id=None,
         client_secret=None,
     )
+
+
+@pytest.fixture
+def mock_session() -> MagicMock:
+    session = MagicMock()
+    session.execute = AsyncMock()
+    return session
