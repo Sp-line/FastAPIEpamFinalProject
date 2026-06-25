@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from typing import cast
 from unittest.mock import AsyncMock
 from unittest.mock import MagicMock
 
@@ -32,8 +33,10 @@ from tests.support.dummy_model import DummyModel  # noqa: F401
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
     from collections.abc import Iterator
+    from contextlib import AbstractAsyncContextManager
 
     from fastapi import FastAPI
+    from sqlalchemy.ext.asyncio import AsyncConnection
 
 
 @pytest.fixture
@@ -66,13 +69,19 @@ async def test_engine(
 
     engine = create_async_engine(postgres_url, echo=False, poolclass=NullPool)
 
-    async with engine.begin() as conn:
+    async with cast(
+        "AbstractAsyncContextManager[AsyncConnection]",
+        cast("object", engine.begin()),
+    ) as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
     yield engine
 
-    async with engine.begin() as conn:
+    async with cast(
+        "AbstractAsyncContextManager[AsyncConnection]",
+        cast("object", engine.begin()),
+    ) as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
     await engine.dispose()
