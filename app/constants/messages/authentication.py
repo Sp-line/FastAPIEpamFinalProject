@@ -2,7 +2,7 @@
 from enum import StrEnum
 
 
-class AuthErrorMessage(StrEnum):
+class AuthenticationErrorMessage(StrEnum):
     INVALID_CREDENTIALS = "Could not validate credentials."
     PASSWORD_TOO_WEAK = (
         "Password must contain at least one lowercase letter, "

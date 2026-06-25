@@ -7,7 +7,7 @@ from fastapi import status
 if TYPE_CHECKING:
     from httpx import AsyncClient
 
-from app.constants.messages.auth import AuthErrorMessage
+from app.constants.messages.authentication import AuthenticationErrorMessage
 from app.constants.messages.db import DBErrorMessage
 
 pytestmark = pytest.mark.requires_db
@@ -107,7 +107,9 @@ async def test_user_login_returns_401_on_invalid_password(
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    assert response.json()["detail"] == AuthErrorMessage.INVALID_CREDENTIALS.value
+    assert (
+        response.json()["detail"] == AuthenticationErrorMessage.INVALID_CREDENTIALS.value
+    )
     assert response.headers.get("WWW-Authenticate") == "Bearer"
 
 
@@ -122,7 +124,9 @@ async def test_user_login_returns_401_on_non_existent_user(
     response = await async_client.post("/login", data=form_data)
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
-    assert response.json()["detail"] == AuthErrorMessage.INVALID_CREDENTIALS.value
+    assert (
+        response.json()["detail"] == AuthenticationErrorMessage.INVALID_CREDENTIALS.value
+    )
     assert response.headers.get("WWW-Authenticate") == "Bearer"
 
 

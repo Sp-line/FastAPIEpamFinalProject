@@ -1,7 +1,7 @@
 import pytest
 from pydantic import SecretStr
 
-from app.constants.messages.auth import AuthErrorMessage
+from app.constants.messages.authentication import AuthenticationErrorMessage
 from app.utils.password_validator import validate_password_strength
 
 
@@ -52,7 +52,9 @@ def test_validate_password_strength_success(raw_password: str) -> None:
 def test_validate_password_strength_raises_error(raw_password: str) -> None:
     secret = SecretStr(raw_password)
 
-    with pytest.raises(ValueError, match=AuthErrorMessage.PASSWORD_TOO_WEAK) as exc_info:
+    with pytest.raises(
+        ValueError, match=AuthenticationErrorMessage.PASSWORD_TOO_WEAK
+    ) as exc_info:
         validate_password_strength(secret)
 
-    assert str(exc_info.value) == AuthErrorMessage.PASSWORD_TOO_WEAK
+    assert str(exc_info.value) == AuthenticationErrorMessage.PASSWORD_TOO_WEAK

@@ -3,7 +3,7 @@ from fastapi import Request
 from fastapi import status
 from fastapi.responses import JSONResponse
 
-from app.constants.messages.auth import AuthErrorMessage
+from app.constants.messages.authentication import AuthenticationErrorMessage
 from app.exceptions.authentication import InvalidCredentialsError
 from app.exceptions.authentication import TokenExpiredError
 from app.exceptions.authentication import TokenInvalidError
@@ -14,7 +14,7 @@ async def invalid_credentials_handler(
 ) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        content={"detail": AuthErrorMessage.INVALID_CREDENTIALS},
+        content={"detail": AuthenticationErrorMessage.INVALID_CREDENTIALS},
         headers={"WWW-Authenticate": "Bearer"},
     )
 
@@ -22,7 +22,7 @@ async def invalid_credentials_handler(
 async def token_expired_handler(_: Request, __: TokenExpiredError) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        content={"detail": AuthErrorMessage.TOKEN_EXPIRED},
+        content={"detail": AuthenticationErrorMessage.TOKEN_EXPIRED},
         headers={"WWW-Authenticate": "Bearer"},
     )
 
@@ -30,7 +30,7 @@ async def token_expired_handler(_: Request, __: TokenExpiredError) -> JSONRespon
 async def token_invalid_handler(_: Request, __: TokenInvalidError) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        content={"detail": AuthErrorMessage.TOKEN_INVALID},
+        content={"detail": AuthenticationErrorMessage.TOKEN_INVALID},
         headers={"WWW-Authenticate": "Bearer"},
     )
 
