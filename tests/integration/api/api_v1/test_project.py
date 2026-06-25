@@ -216,3 +216,140 @@ async def test_delete_project_returns_422_for_invalid_id_type(
     resp = await async_client.delete("/projects/not_an_integer", headers=headers)
 
     assert resp.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+async def test_update_project_returns_200_for_owner(
+    async_client: AsyncClient,
+    auth_headers: tuple[dict[str, str], int],
+) -> None:
+    headers, _ = auth_headers
+
+    proj_resp = await async_client.post(
+        "/projects/",
+        json={"name": "Original Name", "description": "Original Description"},
+        headers=headers,
+    )
+    project_id = proj_resp.json()["id"]
+
+    update_payload = {"name": "Updated Name", "description": "Updated Description"}
+    update_resp = await async_client.put(
+        f"/projects/{project_id}", json=update_payload, headers=headers
+    )
+
+    assert update_resp.status_code == status.HTTP_200_OK
+    data = update_resp.json()
+    assert data["name"] == update_payload["name"]
+    assert data["description"] == update_payload["description"]
+    assert data["id"] == project_id
+
+
+async def test_update_project_returns_200_for_participant(
+    async_client: AsyncClient,
+    db_session: AsyncSession,
+    auth_headers: tuple[dict[str, str], int],
+) -> None:
+    owner_headers, _ = auth_headers
+
+    proj_resp = await async_client.post(
+        "/projects/", json={"name": "Team Project"}, headers=owner_headers
+    )
+    project_id = proj_resp.json()["id"]
+
+    participant_payload = {
+        "username": "project_participant",
+        "password": "ValidPassword123!",
+    }
+    create_resp = await async_client.post("/auth", json=participant_payload)
+    participant_id = create_resp.json()["id"]
+
+    login_resp = await async_client.post("/login", data=participant_payload)
+    participant_headers = {
+        "Authorization": f"Bearer {login_resp.json()['access_token']}"
+    }
+
+    repo = ProjectMemberAssociationRepository(db_session)
+    await repo.create(
+        ProjectMemberCreateDB(
+            user_id=participant_id, project_id=project_id, role=RoleType.PARTICIPANT
+        )
+    )
+    await db_session.commit()
+
+    update_resp = await async_client.put(
+        f"/projects/{project_id}",
+        json={"name": "Participant Updated Name", "description": "Changed by team"},
+        headers=participant_headers,
+    )
+
+    assert update_resp.status_code == status.HTTP_200_OK
+    assert update_resp.json()["name"] == "Participant Updated Name"
+
+
+async def test_update_project_returns_403_for_non_member(
+    async_client: AsyncClient,
+    auth_headers: tuple[dict[str, str], int],
+) -> None:
+    owner_headers, _ = auth_headers
+
+    proj_resp = await async_client.post(
+        "/projects/",
+        json={"name": "Secret Project", "description": "Original description"},
+        headers=owner_headers,
+    )
+    project_id = proj_resp.json()["id"]
+
+    intruder_payload = {"username": "intruder_update", "password": "ValidPassword123!"}
+    await async_client.post("/auth", json=intruder_payload)
+
+    login_resp = await async_client.post("/login", data=intruder_payload)
+    intruder_headers = {"Authorization": f"Bearer {login_resp.json()['access_token']}"}
+
+    update_resp = await async_client.put(
+        f"/projects/{project_id}",
+        json={"name": "Hacked Name", "description": "Hacked description"},
+        headers=intruder_headers,
+    )
+
+    assert update_resp.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.parametrize(
+    ("invalid_name", "expected_errors_count"),
+    [
+        ("A" * (ProjectLimits.NAME_MIN - 1), 1),
+        ("B" * (ProjectLimits.NAME_MAX + 1), 1),
+    ],
+    ids=["name_too_short", "name_too_long"],
+)
+async def test_update_project_returns_422_for_invalid_data(
+    async_client: AsyncClient,
+    auth_headers: tuple[dict[str, str], int],
+    invalid_name: str,
+    expected_errors_count: int,
+) -> None:
+    headers, _ = auth_headers
+
+    proj_resp = await async_client.post(
+        "/projects/",
+        json={"name": "Valid Name", "description": "Original description"},
+        headers=headers,
+    )
+    project_id = proj_resp.json()["id"]
+
+    update_resp = await async_client.put(
+        f"/projects/{project_id}",
+        json={"name": invalid_name, "description": "Valid description"},
+        headers=headers,
+    )
+
+    assert update_resp.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+    assert len(update_resp.json()["detail"]) == expected_errors_count
+
+
+async def test_update_project_returns_401_without_token(
+    async_client: AsyncClient,
+) -> None:
+    resp = await async_client.put("/projects/10", json={"name": "Trying to update"})
+
+    assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+    assert resp.json()["detail"] == "Not authenticated"
