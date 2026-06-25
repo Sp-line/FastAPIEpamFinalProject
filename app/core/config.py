@@ -63,6 +63,9 @@ class DatabaseConfig(BaseModel):
 
 
 class S3Config(BaseModel):
+    endpoint_url: HttpUrl
+    access_key: str
+    secret_key: str
     bucket_name: str
     region: str
 
