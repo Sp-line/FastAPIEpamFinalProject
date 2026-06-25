@@ -35,7 +35,7 @@ async def token_invalid_handler(_: Request, __: TokenInvalidError) -> JSONRespon
     )
 
 
-def register_auth_exception_handlers(app: FastAPI) -> None:
+def register_authentication_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(InvalidCredentialsError, invalid_credentials_handler)  # type: ignore[arg-type]
     app.add_exception_handler(TokenExpiredError, token_expired_handler)  # type: ignore[arg-type]
     app.add_exception_handler(TokenInvalidError, token_invalid_handler)  # type: ignore[arg-type]
