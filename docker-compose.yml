@@ -7,12 +7,15 @@ services:
       - app/.env
     environment:
       - APP_CONFIG__DB__HOST=db
+      - APP_CONFIG__S3__ENDPOINT_URL=http://minio:9000
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
-    command: ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+      minio-setup:
+        condition: service_completed_successfully
+    command: [ "uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
     develop:
       watch:
         - action: sync
@@ -33,10 +36,47 @@ services:
     volumes:
       - pg_data_storage:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
       interval: 5s
       timeout: 3s
       retries: 3
 
+  minio:
+    image: minio/minio
+    container_name: epam_minio
+    ports:
+      - "9000:9000"
+    env_file:
+      - app/.env
+    command: server /data
+    volumes:
+      - minio_data_storage:/data
+
+  minio-setup:
+    image: minio/mc
+    container_name: epam_minio_setup
+    depends_on:
+      - minio
+    env_file:
+      - app/.env
+    entrypoint: >
+      /bin/sh -c "
+      sleep 3;
+      /usr/bin/mc alias set myminio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      /usr/bin/mc mb myminio/$$APP_CONFIG__S3__BUCKET_NAME || true;
+      exit 0;
+      "
+
+  openmaxio-console:
+    image: juacarsud/openmaxio-browser:dev
+    container_name: epam_minio_console
+    ports:
+      - "9090:9090"
+    environment:
+      - CONSOLE_MINIO_SERVER=http://minio:9000
+    depends_on:
+      - minio
+
 volumes:
   pg_data_storage:
+  minio_data_storage:
