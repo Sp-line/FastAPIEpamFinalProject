@@ -10,6 +10,8 @@ from pydantic import SecretStr
 from app.constants.auth import JWTAlgorithm
 from app.core.auth.jwt import JWTService
 from app.core.auth.password import PasswordService
+from app.repositories.project import ProjectRepository
+from app.repositories.project_member import ProjectMemberAssociationRepository
 from app.repositories.user import UserRepository
 from app.schemas.token import JWTPayload
 from app.usages.users.login import UserLoginUsage
@@ -45,6 +47,20 @@ def mock_jwt_service() -> MagicMock:
 def mock_user_repo() -> MagicMock:
     repo = MagicMock(spec=UserRepository)
     repo.get_by_username = AsyncMock()
+    return repo
+
+
+@pytest.fixture
+def mock_project_repo() -> MagicMock:
+    repo = MagicMock(spec=ProjectRepository)
+    repo.create = AsyncMock()
+    return repo
+
+
+@pytest.fixture
+def mock_project_member_repo() -> MagicMock:
+    repo = MagicMock(spec=ProjectMemberAssociationRepository)
+    repo.create = AsyncMock()
     return repo
 
 

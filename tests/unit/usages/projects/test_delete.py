@@ -1,33 +1,21 @@
-from unittest.mock import AsyncMock
-from unittest.mock import MagicMock
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from unittest.mock import MagicMock
 
 import pytest
 
 from app.constants.messages.authorization import AuthorizationErrorMessage
 from app.constants.role_type import RoleType
 from app.exceptions.authorization import ForbiddenError
-from app.repositories.project import ProjectRepository
-from app.repositories.project_member import ProjectMemberAssociationRepository
 from app.usages.projects.delete import ProjectDeleteUsage
 
 
 class DummyMemberAssociation:
     def __init__(self, role: RoleType) -> None:
         self.role = role
-
-
-@pytest.fixture
-def mock_project_repo() -> MagicMock:
-    repo = MagicMock(spec=ProjectRepository)
-    repo.delete = AsyncMock()
-    return repo
-
-
-@pytest.fixture
-def mock_project_member_repo() -> MagicMock:
-    repo = MagicMock(spec=ProjectMemberAssociationRepository)
-    repo.get_by_user_and_project = AsyncMock()
-    return repo
 
 
 @pytest.fixture

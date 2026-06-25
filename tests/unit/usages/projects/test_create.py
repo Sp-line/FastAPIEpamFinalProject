@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
-from unittest.mock import MagicMock
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from unittest.mock import MagicMock
 
 import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
@@ -9,8 +11,6 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 from app.constants import RoleType
 from app.constants.project import ProjectLimits
 from app.exceptions.db import UniqueFieldError
-from app.repositories.project import ProjectRepository
-from app.repositories.project_member import ProjectMemberAssociationRepository
 from app.schemas.project import ProjectCreateDB
 from app.schemas.project import ProjectCreateReq
 from app.schemas.project import ProjectRead
@@ -34,20 +34,6 @@ class ProjectReadFactory(ModelFactory[ProjectRead]):
 
 class ProjectMemberCreateDBFactory(ModelFactory[ProjectMemberCreateDB]):
     __model__ = ProjectMemberCreateDB
-
-
-@pytest.fixture
-def mock_project_repo() -> MagicMock:
-    repo = MagicMock(spec=ProjectRepository)
-    repo.create = AsyncMock()
-    return repo
-
-
-@pytest.fixture
-def mock_project_member_repo() -> MagicMock:
-    repo = MagicMock(spec=ProjectMemberAssociationRepository)
-    repo.create = AsyncMock()
-    return repo
 
 
 @pytest.fixture
