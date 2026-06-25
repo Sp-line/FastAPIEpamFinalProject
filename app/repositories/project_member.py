@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: TC002
 
 from app.core.models.project_member import ProjectMemberAssociation
@@ -22,3 +23,15 @@ class ProjectMemberAssociationRepository(
             session=session,
             table_error_handler=project_member_associations_error_handler,
         )
+
+    async def get_by_user_and_project(
+        self,
+        user_id: int,
+        project_id: int,
+    ) -> ProjectMemberAssociation | None:
+        stmt = select(ProjectMemberAssociation).where(
+            ProjectMemberAssociation.user_id == user_id,
+            ProjectMemberAssociation.project_id == project_id,
+        )
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
