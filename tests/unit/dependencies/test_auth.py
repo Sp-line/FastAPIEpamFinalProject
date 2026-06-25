@@ -11,8 +11,8 @@ if TYPE_CHECKING:
 import pytest
 
 from app.dependencies.auth import extract_user_id_from_token
-from app.exceptions.auth import TokenExpiredError
-from app.exceptions.auth import TokenInvalidError
+from app.exceptions.authentication import TokenExpiredError
+from app.exceptions.authentication import TokenInvalidError
 from app.schemas.token import JWTPayload
 
 TEST_USER_ID = 42

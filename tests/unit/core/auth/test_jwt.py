@@ -7,8 +7,8 @@ import pytest
 
 if TYPE_CHECKING:
     from app.core.auth.jwt import JWTService
-from app.exceptions.auth import TokenExpiredError
-from app.exceptions.auth import TokenInvalidError
+from app.exceptions.authentication import TokenExpiredError
+from app.exceptions.authentication import TokenInvalidError
 from app.schemas.token import JWTPayload
 
 

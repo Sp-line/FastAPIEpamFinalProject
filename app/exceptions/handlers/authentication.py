@@ -4,9 +4,9 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 
 from app.constants.messages.auth import AuthErrorMessage
-from app.exceptions.auth import InvalidCredentialsError
-from app.exceptions.auth import TokenExpiredError
-from app.exceptions.auth import TokenInvalidError
+from app.exceptions.authentication import InvalidCredentialsError
+from app.exceptions.authentication import TokenExpiredError
+from app.exceptions.authentication import TokenInvalidError
 
 
 async def invalid_credentials_handler(

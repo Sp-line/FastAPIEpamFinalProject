@@ -7,7 +7,7 @@ from pydantic import SecretStr
 
 from app.core.auth.jwt import JWTService  # noqa: TC001
 from app.core.auth.password import PasswordService  # noqa: TC001
-from app.exceptions.auth import InvalidCredentialsError
+from app.exceptions.authentication import InvalidCredentialsError
 from app.repositories.unit_of_work import UnitOfWork  # noqa: TC001
 from app.repositories.user import UserRepository  # noqa: TC001
 from app.schemas.token import JWTPayload

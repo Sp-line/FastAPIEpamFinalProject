@@ -7,8 +7,8 @@ from pydantic import SecretStr
 from pydantic import ValidationError
 
 from app.constants.auth import JWTAlgorithm  # noqa: TC001
-from app.exceptions.auth import TokenExpiredError
-from app.exceptions.auth import TokenInvalidError
+from app.exceptions.authentication import TokenExpiredError
+from app.exceptions.authentication import TokenInvalidError
 from app.schemas.token import JWTPayload
 
 

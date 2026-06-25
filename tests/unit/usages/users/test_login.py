@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 import pytest
 from pydantic import SecretStr
 
-from app.exceptions.auth import InvalidCredentialsError
+from app.exceptions.authentication import InvalidCredentialsError
 from app.schemas.token import Token
 
 
