@@ -1,71 +1,17 @@
-from unittest.mock import AsyncMock
-from unittest.mock import MagicMock
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from unittest.mock import MagicMock
+
+    from fastapi.security import OAuth2PasswordRequestForm
+
+    from app.usages.users.login import UserLoginUsage
 
 import pytest
-from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import SecretStr
 
-from app.core.auth.jwt import JWTService
-from app.core.auth.password import PasswordService
 from app.exceptions.auth import InvalidCredentialsError
-from app.repositories.unit_of_work import UnitOfWork
-from app.repositories.user import UserRepository
 from app.schemas.token import Token
-from app.usages.users.login import UserLoginUsage
-
-
-@pytest.fixture
-def mock_user_repo() -> MagicMock:
-    repo = MagicMock(spec=UserRepository)
-    repo.get_by_username = AsyncMock()
-    return repo
-
-
-@pytest.fixture
-def mock_uow() -> MagicMock:
-    uow = MagicMock(spec=UnitOfWork)
-    uow.__aenter__ = AsyncMock(return_value=uow)
-    uow.__aexit__ = AsyncMock(return_value=None)
-    return uow
-
-
-@pytest.fixture
-def mock_jwt_service() -> MagicMock:
-    service = MagicMock(spec=JWTService)
-    service.create_access_token.return_value = "fake.jwt.token"
-    return service
-
-
-@pytest.fixture
-def mock_password_service() -> MagicMock:
-    return MagicMock(spec=PasswordService)
-
-
-@pytest.fixture
-def login_use_case(
-    mock_user_repo: MagicMock,
-    mock_uow: MagicMock,
-    mock_jwt_service: MagicMock,
-    mock_password_service: MagicMock,
-) -> UserLoginUsage:
-    return UserLoginUsage(
-        repository=mock_user_repo,
-        unit_of_work=mock_uow,
-        jwt_service=mock_jwt_service,
-        password_service=mock_password_service,
-    )
-
-
-@pytest.fixture
-def form_data() -> OAuth2PasswordRequestForm:
-    return OAuth2PasswordRequestForm(
-        grant_type="password",
-        username="test_user",
-        password="ValidPassword123!",  # noqa: S106
-        scope="",
-        client_id=None,
-        client_secret=None,
-    )
 
 
 class DummyDBUser:

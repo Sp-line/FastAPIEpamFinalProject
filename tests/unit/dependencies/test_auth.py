@@ -1,20 +1,21 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from typing import cast
-from unittest.mock import Mock
+
+if TYPE_CHECKING:
+    from unittest.mock import Mock
+
+    from app.core.auth.jwt import JWTService
 
 import pytest
 
-from app.core.auth.jwt import JWTService
 from app.dependencies.auth import extract_user_id_from_token
 from app.exceptions.auth import TokenExpiredError
 from app.exceptions.auth import TokenInvalidError
 from app.schemas.token import JWTPayload
 
 TEST_USER_ID = 42
-
-
-@pytest.fixture
-def mock_jwt_service() -> Mock:
-    return Mock(spec=JWTService)
 
 
 def test_extract_user_id_returns_int_on_valid_token(
