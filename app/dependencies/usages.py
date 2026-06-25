@@ -3,6 +3,7 @@ from dishka import Scope
 from dishka import provide
 
 from app.usages.projects.create import ProjectCreateUsage
+from app.usages.projects.delete import ProjectDeleteUsage
 from app.usages.users.login import UserLoginUsage
 
 
@@ -12,3 +13,4 @@ class UsagesProvider(Provider):
     get_user_login_usage = provide(UserLoginUsage)
 
     get_project_create_usage = provide(ProjectCreateUsage)
+    get_project_delete_usage = provide(ProjectDeleteUsage)
