@@ -11,8 +11,10 @@ from app.core.config import settings
 from app.dependencies.auth import get_current_user_id
 from app.schemas.project import ProjectCreateReq  # noqa: TC001
 from app.schemas.project import ProjectRead  # noqa: TC001
+from app.schemas.project import ProjectUpdateReq  # noqa: TC001
 from app.usages.projects.create import ProjectCreateUsage  # noqa: TC001
 from app.usages.projects.delete import ProjectDeleteUsage  # noqa: TC001
+from app.usages.projects.update import ProjectUpdateUsage  # noqa: TC001
 
 router = APIRouter(route_class=DishkaRoute, prefix=settings.api.v1.projects)
 
@@ -39,3 +41,15 @@ async def delete_project(
     current_user_id: Annotated[PositiveInt, Depends(get_current_user_id)],
 ) -> None:
     await project_delete_usage(project_id, current_user_id)
+
+
+@router.put(
+    "/{project_id}",
+)
+async def update_project(
+    project_id: int,
+    data: ProjectUpdateReq,
+    project_update_usage: FromDishka[ProjectUpdateUsage],
+    current_user_id: Annotated[PositiveInt, Depends(get_current_user_id)],
+) -> ProjectRead:
+    return await project_update_usage(project_id, data, current_user_id)
