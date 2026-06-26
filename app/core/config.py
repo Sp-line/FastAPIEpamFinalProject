@@ -80,6 +80,8 @@ class S3Config(BaseModel):
     bucket_name: str
     region: str
 
+    presigned_url_expire_seconds: int = 5 * 60
+
 
 class AuthConfig(BaseModel):
     secret: SecretStr
