@@ -1,13 +1,23 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel
 from pydantic import HttpUrl
 from pydantic import PostgresDsn
 from pydantic import SecretStr
 from pydantic import computed_field
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
 from app.constants.auth import JWTAlgorithm
 from app.constants.db import DBDriver
+from app.constants.env_type import EnvironmentType
+from app.constants.messages.config import ConfigErrorMessage
+
+if TYPE_CHECKING:
+    from typing import Self
 
 
 class RunConfig(BaseModel):
@@ -63,9 +73,9 @@ class DatabaseConfig(BaseModel):
 
 
 class S3Config(BaseModel):
-    endpoint_url: HttpUrl
-    access_key: str
-    secret_key: str
+    endpoint_url: HttpUrl | None = None
+    access_key: str | None = None
+    secret_key: str | None = None
     bucket_name: str
     region: str
 
@@ -77,6 +87,7 @@ class AuthConfig(BaseModel):
 
 
 class Settings(BaseSettings):
+    env: EnvironmentType = EnvironmentType.LOCAL
     run: RunConfig = RunConfig()
     api: ApiPrefix = ApiPrefix()
     test_db: TestDBConfig = TestDBConfig()
@@ -92,6 +103,17 @@ class Settings(BaseSettings):
         env_prefix="APP_CONFIG__",
         extra="ignore",
     )
+
+    @model_validator(mode="after")
+    def validate_s3_credentials_for_env(self) -> Self:
+        env_depends_on_minio = self.env in {EnvironmentType.LOCAL, EnvironmentType.TEST}
+        missing_minio_credentials = not all(
+            [self.s3.access_key, self.s3.secret_key, self.s3.endpoint_url]
+        )
+
+        if env_depends_on_minio and missing_minio_credentials:
+            raise ValueError(ConfigErrorMessage.LOCAL_S3_MISSING_CREDENTIALS)
+        return self
 
 
 settings = Settings()
