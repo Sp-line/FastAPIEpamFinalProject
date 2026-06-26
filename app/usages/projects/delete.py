@@ -6,6 +6,7 @@ if TYPE_CHECKING:
 from app.constants.messages.authorization import AuthorizationErrorMessage
 from app.constants.role_type import RoleType
 from app.exceptions.authorization import ForbiddenError
+from app.exceptions.db import ObjectNotFoundError
 from app.repositories.project import ProjectRepository  # noqa: TC001
 from app.repositories.project_member import (
     ProjectMemberAssociationRepository,  # noqa: TC001
@@ -36,4 +37,5 @@ class ProjectDeleteUsage:
             if not member_association or member_association.role != RoleType.OWNER:
                 raise ForbiddenError(AuthorizationErrorMessage.FORBIDDEN)
 
-            await self._repo.delete(project_id)
+            if not await self._repo.delete(project_id):
+                raise ObjectNotFoundError(obj_id=project_id, table_name="projects")
