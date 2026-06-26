@@ -162,7 +162,7 @@ Resources:
     Type: AWS::WAFv2::WebACL
     Properties:
       DefaultAction:
-        Allow: {}
+        Allow: { }
       Scope: REGIONAL
       VisibilityConfig:
         SampledRequestsEnabled: true
@@ -176,7 +176,7 @@ Resources:
               VendorName: AWS
               Name: AWSManagedRulesCommonRuleSet
           OverrideAction:
-            None: {}
+            None: { }
           VisibilityConfig:
             SampledRequestsEnabled: true
             CloudWatchMetricsEnabled: true
@@ -331,6 +331,8 @@ Resources:
           PortMappings:
             - ContainerPort: 8000
           Environment:
+            - Name: APP_CONFIG__ENV
+              Value: "production"
             - Name: APP_CONFIG__DB__HOST
               Value: !GetAtt PostgreSQLDB.Endpoint.Address
             - Name: APP_CONFIG__DB__PORT
