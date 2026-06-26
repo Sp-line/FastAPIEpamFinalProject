@@ -36,7 +36,7 @@ async def create_project(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_project(
-    project_id: int,
+    project_id: PositiveInt,
     project_delete_usage: FromDishka[ProjectDeleteUsage],
     current_user_id: Annotated[PositiveInt, Depends(get_current_user_id)],
 ) -> None:
@@ -47,7 +47,7 @@ async def delete_project(
     "/{project_id}",
 )
 async def update_project(
-    project_id: int,
+    project_id: PositiveInt,
     data: ProjectUpdateReq,
     project_update_usage: FromDishka[ProjectUpdateUsage],
     current_user_id: Annotated[PositiveInt, Depends(get_current_user_id)],
