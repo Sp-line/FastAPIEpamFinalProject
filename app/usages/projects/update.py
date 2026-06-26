@@ -49,9 +49,8 @@ class ProjectUpdateUsage:
                 raise ForbiddenError(AuthorizationErrorMessage.FORBIDDEN)
 
             update_data = ProjectUpdateDB(**data.model_dump())
-            updated_project = await self._repo.update(project_id, update_data)
 
-            if not updated_project:
+            if not (updated_project := await self._repo.update(project_id, update_data)):
                 raise ObjectNotFoundError(table_name="projects", obj_id=project_id)
 
             return ProjectRead.model_validate(updated_project)
