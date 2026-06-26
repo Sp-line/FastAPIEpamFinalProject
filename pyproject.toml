@@ -89,6 +89,7 @@ env = [
     "APP_CONFIG__S3__ACCESS_KEY=fake_access_key",
     "APP_CONFIG__S3__SECRET_KEY=fake_secret_key",
     "APP_CONFIG__AUTH__SECRET=super_secret_test_key_only_for_ci_cd",
+    "APP_CONFIG__ENV=testing",
 ]
 
 xfail_strict = true
