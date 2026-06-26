@@ -124,9 +124,7 @@ async def test_delete_project_returns_403_for_participant(
     )
 
     assert del_resp.status_code == status.HTTP_403_FORBIDDEN
-    assert (
-        del_resp.json()["detail"] == AuthorizationErrorMessage.PROJECT_DELETE_FORBIDDEN
-    )
+    assert del_resp.json()["detail"] == AuthorizationErrorMessage.FORBIDDEN
 
 
 async def test_delete_project_returns_403_for_non_member(
@@ -142,9 +140,7 @@ async def test_delete_project_returns_403_for_non_member(
     )
 
     assert del_resp.status_code == status.HTTP_403_FORBIDDEN
-    assert (
-        del_resp.json()["detail"] == AuthorizationErrorMessage.PROJECT_DELETE_FORBIDDEN
-    )
+    assert del_resp.json()["detail"] == AuthorizationErrorMessage.FORBIDDEN
 
 
 async def test_update_project_returns_200_for_owner(

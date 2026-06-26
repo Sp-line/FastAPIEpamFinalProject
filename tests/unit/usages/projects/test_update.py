@@ -94,7 +94,7 @@ async def test_call_raises_forbidden_error_when_unauthorized(
     with pytest.raises(ForbiddenError) as exc_info:
         await project_update_usage(project_id=10, data=mock_req_data, current_user_id=42)
 
-    assert str(exc_info.value) == AuthorizationErrorMessage.PROJECT_UPDATE_FORBIDDEN
+    assert str(exc_info.value) == AuthorizationErrorMessage.FORBIDDEN
     mock_project_repo.update.assert_not_awaited()
 
 

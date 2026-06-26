@@ -34,6 +34,6 @@ class ProjectDeleteUsage:
             )
 
             if not member_association or member_association.role != RoleType.OWNER:
-                raise ForbiddenError(AuthorizationErrorMessage.PROJECT_DELETE_FORBIDDEN)
+                raise ForbiddenError(AuthorizationErrorMessage.FORBIDDEN)
 
             await self._repo.delete(project_id)

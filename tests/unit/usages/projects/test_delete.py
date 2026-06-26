@@ -69,6 +69,6 @@ async def test_call_raises_forbidden_error_when_unauthorized(
     with pytest.raises(ForbiddenError) as exc_info:
         await project_delete_usage(project_id=10, current_user_id=42)
 
-    assert str(exc_info.value) == AuthorizationErrorMessage.PROJECT_DELETE_FORBIDDEN
+    assert str(exc_info.value) == AuthorizationErrorMessage.FORBIDDEN
 
     mock_project_repo.delete.assert_not_awaited()

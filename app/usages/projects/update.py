@@ -46,7 +46,7 @@ class ProjectUpdateUsage:
                 RoleType.OWNER,
                 RoleType.PARTICIPANT,
             }:
-                raise ForbiddenError(AuthorizationErrorMessage.PROJECT_UPDATE_FORBIDDEN)
+                raise ForbiddenError(AuthorizationErrorMessage.FORBIDDEN)
 
             update_data = ProjectUpdateDB(**data.model_dump())
             updated_project = await self._repo.update(project_id, update_data)
