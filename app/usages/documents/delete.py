@@ -54,13 +54,11 @@ class DocumentDeleteUsage:
             role = member_association.role if member_association is not None else None
             self._ensure_can_delete_document(role)
 
-            s3_key = obj.s3_key
-
             await self._repo.delete(document_id)
 
         try:
-            await self._storage.delete_file(s3_key)
+            await self._storage.delete_file(obj.s3_key)
         except BotoCoreError, ClientError:
             logger.exception(
-                "Failed to delete orphaned file from S3. S3 Key: %s", s3_key
+                "Failed to delete orphaned file from S3. S3 Key: %s", obj.s3_key
             )

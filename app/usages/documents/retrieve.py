@@ -53,15 +53,13 @@ class DocumentRetrieveUsage:
             role = member_association.role if member_association is not None else None
             self._ensure_can_retrieve_document(role)
 
-            document_read = DocumentRead.model_validate(obj)
-            s3_key = obj.s3_key
-            original_name = obj.original_name
-
         presigned_url = await self._storage.get_presigned_url(
-            key=s3_key,
-            original_name=original_name,
+            key=obj.s3_key,
+            original_name=obj.original_name,
             expires_in=settings.s3.presigned_url_expire_seconds,
         )
+
+        document_read = DocumentRead.model_validate(obj)
 
         return DocumentDownload(
             **document_read.model_dump(), download_url=HttpUrl(presigned_url)
