@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from typing import BinaryIO
 
     from aiobotocore.response import StreamingBody
+    from types_aiobotocore_s3.type_defs import ObjectIdentifierTypeDef
 
 
 class S3Storage:
@@ -41,3 +42,18 @@ class S3Storage:
     async def get_file_stream(self, key: str) -> tuple[StreamingBody, str]:
         response = await self._client.get_object(Bucket=self._bucket, Key=key)
         return response["Body"], response["ContentType"]
+
+    async def delete_files(self, *keys: str) -> None:
+        if not keys:
+            return
+
+        for i in range(0, len(keys), 1000):
+            chunk = keys[i : i + 1000]
+            objects_to_delete: list[ObjectIdentifierTypeDef] = [
+                {"Key": key} for key in chunk
+            ]
+
+            await self._client.delete_objects(
+                Bucket=self._bucket,
+                Delete={"Objects": objects_to_delete},
+            )
