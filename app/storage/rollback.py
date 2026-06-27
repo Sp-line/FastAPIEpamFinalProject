@@ -19,10 +19,10 @@ class S3Rollback:
     def __init__(
         self,
         storage: S3Storage,
-        key: str,
+        *keys: str,
     ) -> None:
         self._storage = storage
-        self._key = key
+        self._keys = keys
 
     async def __aenter__(self) -> Self:
         return self
@@ -35,8 +35,8 @@ class S3Rollback:
     ) -> None:
         if exc_type is not None:
             try:
-                await self._storage.delete_file(self._key)
+                await self._storage.delete_files(*self._keys)
             except ClientError, BotoCoreError:
                 logger.exception(
-                    "Failed to rollback S3 file after error. Key: %s", self._key
+                    "Failed to rollback S3 files after error. Keys: %s", self._keys
                 )
