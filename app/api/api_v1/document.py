@@ -10,6 +10,7 @@ from pydantic import PositiveInt  # noqa: TC002
 
 from app.dependencies.auth import get_current_user_id
 from app.dependencies.file import validate_document_file
+from app.dependencies.file import validate_document_files
 from app.schemas.document import DocumentCreateReq
 from app.schemas.document import DocumentDownload
 from app.schemas.document import DocumentRead
@@ -26,16 +27,16 @@ router = APIRouter(route_class=DishkaRoute)
     "/projects/{project_id}/documents",
     status_code=status.HTTP_201_CREATED,
 )
-async def create_document(
+async def create_documents(
     project_id: PositiveInt,
-    file: Annotated[UploadFile, Depends(validate_document_file)],
+    files: Annotated[list[UploadFile], Depends(validate_document_files)],
     current_user_id: Annotated[PositiveInt, Depends(get_current_user_id)],
     document_create_usage: FromDishka[DocumentCreateUsage],
-) -> DocumentRead:
+) -> list[DocumentRead]:
     data = DocumentCreateReq(project_id=project_id)
     return await document_create_usage(
         data=data,
-        file=file,
+        files=files,
         current_user_id=current_user_id,
     )
 
