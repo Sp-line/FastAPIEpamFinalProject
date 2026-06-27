@@ -31,3 +31,8 @@ class DocumentRepository(
         stmt = select(self._model).where(self._model.project_id == project_id)
         result = await self._session.execute(stmt)
         return result.scalars().all()
+
+    async def get_keys_by_project(self, project_id: int) -> Sequence[str]:
+        stmt = select(self._model.s3_key).where(self._model.project_id == project_id)
+        result = await self._session.execute(stmt)
+        return result.scalars().all()
