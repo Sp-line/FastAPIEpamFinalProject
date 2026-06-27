@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from app.repositories.document import DocumentRepository
 from app.repositories.project import ProjectRepository
 from app.repositories.project_member import ProjectMemberAssociationRepository
 from app.repositories.user import UserRepository
@@ -20,3 +21,8 @@ def mock_project_repo() -> AsyncMock:
 @pytest.fixture
 def mock_project_member_repo() -> AsyncMock:
     return AsyncMock(spec=ProjectMemberAssociationRepository)
+
+
+@pytest.fixture
+def mock_document_repo() -> AsyncMock:
+    return AsyncMock(spec=DocumentRepository)

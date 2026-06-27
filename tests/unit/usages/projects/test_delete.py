@@ -21,10 +21,12 @@ class DummyMemberAssociation:
 
 
 @pytest.fixture
-def project_delete_usage(
+def project_delete_usage(  # noqa: PLR0913
     mock_project_repo: MagicMock,
     mock_uow: MagicMock,
     mock_project_member_repo: MagicMock,
+    mock_document_repo: MagicMock,
+    mock_s3_storage: MagicMock,
     ensure_can_delete_project: EnsureCanDeleteProject,
 ) -> ProjectDeleteUsage:
     return ProjectDeleteUsage(
@@ -32,6 +34,8 @@ def project_delete_usage(
         unit_of_work=mock_uow,
         project_member_repository=mock_project_member_repo,
         ensure_can_delete_project=ensure_can_delete_project,
+        document_repository=mock_document_repo,
+        s3_storage=mock_s3_storage,
     )
 
 
