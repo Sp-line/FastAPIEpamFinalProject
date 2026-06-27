@@ -24,10 +24,16 @@ class S3Storage:
     async def delete_file(self, key: str) -> None:
         await self._client.delete_object(Bucket=self._bucket, Key=key)
 
-    async def get_presigned_url(self, key: str, expires_in: int) -> str:
+    async def get_presigned_url(
+        self, key: str, original_name: str, expires_in: int
+    ) -> str:
         url = await self._client.generate_presigned_url(
             "get_object",
-            Params={"Bucket": self._bucket, "Key": key},
+            Params={
+                "Bucket": self._bucket,
+                "Key": key,
+                "ResponseContentDisposition": f'attachment; filename="{original_name}"',
+            },
             ExpiresIn=expires_in,
         )
         return str(url)

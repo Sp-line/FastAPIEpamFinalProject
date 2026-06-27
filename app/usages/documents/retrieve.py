@@ -57,9 +57,11 @@ class DocumentRetrieveUsage:
 
             document_read = DocumentRead.model_validate(obj)
             s3_key = obj.s3_key
+            original_name = obj.original_name
 
         presigned_url = await self._storage.get_presigned_url(
             key=s3_key,
+            original_name=original_name,
             expires_in=settings.s3.presigned_url_expire_seconds,
         )
 
