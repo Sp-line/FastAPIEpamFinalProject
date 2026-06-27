@@ -9,6 +9,7 @@ from pydantic import PositiveInt
 from app.constants.project import ProjectLimits
 from app.schemas.base import Id
 from app.schemas.document import DocumentRead  # noqa: TC001
+from app.schemas.user import Username  # noqa: TC001
 
 type ProjectName = Annotated[
     str, MinLen(ProjectLimits.NAME_MIN), MaxLen(ProjectLimits.NAME_MAX)
@@ -50,3 +51,7 @@ class ProjectInfoReadWithDocuments(ProjectRead):
     documents: list[DocumentRead]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ProjectInviteReq(BaseModel):
+    username: Username
