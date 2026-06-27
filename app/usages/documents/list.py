@@ -1,9 +1,7 @@
 from pydantic import PositiveInt
 from pydantic import TypeAdapter
 
-from app.constants.messages.authorization import AuthorizationErrorMessage
-from app.constants.role_type import RoleType
-from app.exceptions.authorization import ForbiddenError
+from app.domain.document import EnsureCanListDocument  # noqa: TC001
 from app.repositories.document import DocumentRepository  # noqa: TC001
 from app.repositories.project_member import (
     ProjectMemberAssociationRepository,  # noqa: TC001
@@ -18,10 +16,12 @@ class DocumentListUsage:
         repository: DocumentRepository,
         project_member_repository: ProjectMemberAssociationRepository,
         unit_of_work: UnitOfWork,
+        ensure_can_list_document: EnsureCanListDocument,
     ) -> None:
         self._repo = repository
         self._project_member_repo = project_member_repository
         self._uow = unit_of_work
+        self._ensure_can_list_document = ensure_can_list_document
 
     async def __call__(
         self,
@@ -34,11 +34,8 @@ class DocumentListUsage:
                 project_id=project_id,
             )
 
-            if not member_association or member_association.role not in {
-                RoleType.OWNER,
-                RoleType.PARTICIPANT,
-            }:
-                raise ForbiddenError(AuthorizationErrorMessage.FORBIDDEN)
+            role = member_association.role if member_association is not None else None
+            self._ensure_can_list_document(role)
 
             documents_adapter = TypeAdapter(list[DocumentRead])
             documents = await self._repo.get_by_project_id(project_id)

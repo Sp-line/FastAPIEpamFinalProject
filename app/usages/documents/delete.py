@@ -6,12 +6,11 @@ from typing import TYPE_CHECKING
 from botocore.exceptions import BotoCoreError
 from botocore.exceptions import ClientError
 
+from app.domain.document import EnsureCanDeleteDocument  # noqa: TC001
+
 if TYPE_CHECKING:
     from pydantic import PositiveInt
 
-from app.constants.messages.authorization import AuthorizationErrorMessage
-from app.constants.role_type import RoleType
-from app.exceptions.authorization import ForbiddenError
 from app.exceptions.db import ObjectNotFoundError
 from app.repositories.document import DocumentRepository  # noqa: TC001
 from app.repositories.project_member import (
@@ -30,11 +29,13 @@ class DocumentDeleteUsage:
         unit_of_work: UnitOfWork,
         project_member_repository: ProjectMemberAssociationRepository,
         s3_storage: S3Storage,
+        ensure_can_delete_document: EnsureCanDeleteDocument,
     ) -> None:
         self._repo = repository
         self._uow = unit_of_work
         self._project_member_repo = project_member_repository
         self._storage = s3_storage
+        self._ensure_can_delete_document = ensure_can_delete_document
 
     async def __call__(
         self,
@@ -50,8 +51,8 @@ class DocumentDeleteUsage:
                 project_id=obj.project_id,
             )
 
-            if not member_association or member_association.role != RoleType.OWNER:
-                raise ForbiddenError(AuthorizationErrorMessage.FORBIDDEN)
+            role = member_association.role if member_association is not None else None
+            self._ensure_can_delete_document(role)
 
             s3_key = obj.s3_key
 

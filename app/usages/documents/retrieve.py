@@ -4,13 +4,12 @@ from typing import TYPE_CHECKING
 
 from pydantic import HttpUrl
 
+from app.domain.document import EnsureCanRetrieveDocument  # noqa: TC001
+
 if TYPE_CHECKING:
     from pydantic import PositiveInt
 
-from app.constants.messages.authorization import AuthorizationErrorMessage
-from app.constants.role_type import RoleType
 from app.core.config import settings
-from app.exceptions.authorization import ForbiddenError
 from app.exceptions.db import ObjectNotFoundError
 from app.repositories.document import DocumentRepository  # noqa: TC001
 from app.repositories.project_member import (
@@ -29,11 +28,13 @@ class DocumentRetrieveUsage:
         project_member_repository: ProjectMemberAssociationRepository,
         unit_of_work: UnitOfWork,
         s3_storage: S3Storage,
+        ensure_can_retrieve_document: EnsureCanRetrieveDocument,
     ) -> None:
         self._repo = repository
         self._project_member_repo = project_member_repository
         self._uow = unit_of_work
         self._storage = s3_storage
+        self._ensure_can_retrieve_document = ensure_can_retrieve_document
 
     async def __call__(
         self,
@@ -49,11 +50,8 @@ class DocumentRetrieveUsage:
                 project_id=obj.project_id,
             )
 
-            if not member_association or member_association.role not in {
-                RoleType.OWNER,
-                RoleType.PARTICIPANT,
-            }:
-                raise ForbiddenError(AuthorizationErrorMessage.FORBIDDEN)
+            role = member_association.role if member_association is not None else None
+            self._ensure_can_retrieve_document(role)
 
             document_read = DocumentRead.model_validate(obj)
             s3_key = obj.s3_key
