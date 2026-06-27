@@ -9,9 +9,7 @@ from app.exceptions.file import FileNameError
 from app.exceptions.file import FileTypeError
 
 
-async def validate_document_file(
-    file: Annotated[UploadFile, File(...)],
-) -> UploadFile:
+def _check_document_file(file: UploadFile) -> None:
     if not file.filename:
         raise FileNameError(FileErrorMessage.FILENAME_MISSING)
 
@@ -20,4 +18,18 @@ async def validate_document_file(
             file_type=file.content_type,
             allowed_types=list(DocumentMimeType),
         )
+
+
+async def validate_document_file(
+    file: Annotated[UploadFile, File(...)],
+) -> UploadFile:
+    _check_document_file(file)
     return file
+
+
+async def validate_document_files(
+    files: Annotated[list[UploadFile], File(...)],
+) -> list[UploadFile]:
+    for file in files:
+        _check_document_file(file)
+    return files
