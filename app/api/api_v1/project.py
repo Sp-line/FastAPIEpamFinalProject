@@ -14,6 +14,7 @@ from app.schemas.project import ProjectRead  # noqa: TC001
 from app.schemas.project import ProjectUpdateReq  # noqa: TC001
 from app.usages.projects.create import ProjectCreateUsage  # noqa: TC001
 from app.usages.projects.delete import ProjectDeleteUsage  # noqa: TC001
+from app.usages.projects.retrieve import ProjectRetrieveInfoUsage  # noqa: TC001
 from app.usages.projects.update import ProjectUpdateUsage  # noqa: TC001
 
 router = APIRouter(route_class=DishkaRoute, prefix=settings.api.v1.projects)
@@ -53,3 +54,14 @@ async def update_project(
     current_user_id: Annotated[PositiveInt, Depends(get_current_user_id)],
 ) -> ProjectRead:
     return await project_update_usage(project_id, data, current_user_id)
+
+
+@router.get(
+    "/{project_id}/info",
+)
+async def retrieve_project_info(
+    project_id: PositiveInt,
+    project_retrieve_info_usage: FromDishka[ProjectRetrieveInfoUsage],
+    current_user_id: Annotated[PositiveInt, Depends(get_current_user_id)],
+) -> ProjectRead:
+    return await project_retrieve_info_usage(project_id, current_user_id)
