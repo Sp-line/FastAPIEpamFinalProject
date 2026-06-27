@@ -8,6 +8,7 @@ from pydantic import PositiveInt
 
 from app.constants.project import ProjectLimits
 from app.schemas.base import Id
+from app.schemas.document import DocumentRead  # noqa: TC001
 
 type ProjectName = Annotated[
     str, MinLen(ProjectLimits.NAME_MIN), MaxLen(ProjectLimits.NAME_MAX)
@@ -41,5 +42,11 @@ class ProjectUpdateDB(BaseModel):
 
 class ProjectRead(Id, ProjectBase):
     creator_id: PositiveInt
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ProjectInfoReadWithDocuments(ProjectRead):
+    documents: list[DocumentRead]
 
     model_config = ConfigDict(from_attributes=True)
