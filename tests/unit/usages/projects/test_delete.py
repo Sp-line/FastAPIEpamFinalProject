@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
+    from app.domain.project import EnsureCanDeleteProject
+
 import pytest
 
 from app.constants.messages.authorization import AuthorizationErrorMessage
@@ -23,11 +25,13 @@ def project_delete_usage(
     mock_project_repo: MagicMock,
     mock_uow: MagicMock,
     mock_project_member_repo: MagicMock,
+    ensure_can_delete_project: EnsureCanDeleteProject,
 ) -> ProjectDeleteUsage:
     return ProjectDeleteUsage(
         repository=mock_project_repo,
         unit_of_work=mock_uow,
         project_member_repository=mock_project_member_repo,
+        ensure_can_delete_project=ensure_can_delete_project,
     )
 
 

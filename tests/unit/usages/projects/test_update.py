@@ -1,8 +1,13 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest
 
+if TYPE_CHECKING:
+    from app.domain.project import EnsureCanUpdateProject
 from app.constants.messages.authorization import AuthorizationErrorMessage
 from app.constants.role_type import RoleType
 from app.exceptions.authorization import ForbiddenError
@@ -20,11 +25,13 @@ def project_update_usage(
     mock_project_repo: MagicMock,
     mock_project_member_repo: MagicMock,
     mock_uow: MagicMock,
+    ensure_can_update_project: EnsureCanUpdateProject,
 ) -> ProjectUpdateUsage:
     return ProjectUpdateUsage(
         repository=mock_project_repo,
         project_member_repository=mock_project_member_repo,
         unit_of_work=mock_uow,
+        ensure_can_update_project=ensure_can_update_project,
     )
 
 
