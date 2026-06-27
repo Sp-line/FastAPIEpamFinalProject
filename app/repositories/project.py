@@ -1,3 +1,13 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: TC002
 
 from app.core.models import Project
@@ -20,3 +30,17 @@ class ProjectRepository(
             session=session,
             table_error_handler=projects_error_handler,
         )
+
+    async def get_by_ids_with_documents(
+        self, project_ids: Sequence[int]
+    ) -> Sequence[Project]:
+        if not project_ids:
+            return []
+
+        stmt = (
+            select(self._model)
+            .where(self._model.id.in_(project_ids))
+            .options(selectinload(self._model.documents))
+        )
+        result = await self._session.execute(stmt)
+        return result.scalars().all()
