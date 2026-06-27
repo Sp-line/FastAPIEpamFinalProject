@@ -6,6 +6,7 @@ from botocore.exceptions import BotoCoreError
 from botocore.exceptions import ClientError
 
 from app.domain.document import EnsureCanUpdateDocument  # noqa: TC001
+from app.storage.rollback import S3Rollback
 
 if TYPE_CHECKING:
     from fastapi import UploadFile
@@ -73,34 +74,17 @@ class DocumentUpdateUsage:
             content_type=cast("str", file.content_type),
         )
 
-        try:
-            async with self._uow:
-                member_association = (
-                    await self._project_member_repo.get_by_user_and_project(
-                        user_id=current_user_id,
-                        project_id=old_obj.project_id,
-                    )
-                )
+        async with S3Rollback(self._storage, new_key), self._uow:
+            member_association = await self._project_member_repo.get_by_user_and_project(
+                user_id=current_user_id,
+                project_id=old_obj.project_id,
+            )
 
-                role = (
-                    member_association.role if member_association is not None else None
-                )
-                self._ensure_can_update_document(role)
+            role = member_association.role if member_association is not None else None
+            self._ensure_can_update_document(role)
 
-                update_data = DocumentUpdateDB(
-                    s3_key=new_key, original_name=file.filename
-                )
-                updated_obj = await self._repo.update(document_id, update_data)
-
-        except Exception:
-            try:
-                await self._storage.delete_file(new_key)
-            except ClientError, BotoCoreError:
-                logger.exception(
-                    "Failed to rollback new S3 file after DB update error. Key: %s",
-                    new_key,
-                )
-            raise
+            update_data = DocumentUpdateDB(s3_key=new_key, original_name=file.filename)
+            updated_obj = await self._repo.update(document_id, update_data)
 
         try:
             await self._storage.delete_file(old_obj.s3_key)

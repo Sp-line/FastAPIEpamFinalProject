@@ -2,10 +2,8 @@ import logging
 from typing import TYPE_CHECKING
 from typing import cast
 
-from botocore.exceptions import BotoCoreError
-from botocore.exceptions import ClientError
-
 from app.domain.document import EnsureCanCreateDocument  # noqa: TC001
+from app.storage.rollback import S3Rollback
 
 if TYPE_CHECKING:
     from fastapi import UploadFile
@@ -70,35 +68,20 @@ class DocumentCreateUsage:
             content_type=cast("str", file.content_type),
         )
 
-        try:
-            async with self._uow:
-                member_association = (
-                    await self._project_member_repo.get_by_user_and_project(
-                        user_id=current_user_id,
-                        project_id=data.project_id,
-                    )
-                )
+        async with S3Rollback(self._storage, key), self._uow:
+            member_association = await self._project_member_repo.get_by_user_and_project(
+                user_id=current_user_id,
+                project_id=data.project_id,
+            )
 
-                role = (
-                    member_association.role if member_association is not None else None
-                )
-                self._ensure_can_create_document(role)
+            role = member_association.role if member_association is not None else None
+            self._ensure_can_create_document(role)
 
-                create_data = DocumentCreateDB(
-                    **data.model_dump(),
-                    s3_key=key,
-                    original_name=cast("str", file.filename),
-                )
+            create_data = DocumentCreateDB(
+                **data.model_dump(),
+                s3_key=key,
+                original_name=cast("str", file.filename),
+            )
 
-                obj = await self._repo.create(create_data)
-                return DocumentRead.model_validate(obj)
-
-        except Exception:
-            try:
-                await self._storage.delete_file(key)
-            except ClientError, BotoCoreError:
-                logger.exception(
-                    "Failed to delete orphaned S3 file after DB rollback. Key: %s", key
-                )
-
-            raise
+            obj = await self._repo.create(create_data)
+            return DocumentRead.model_validate(obj)
