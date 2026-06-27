@@ -1,0 +1,23 @@
+from typing import Annotated
+
+from fastapi import File
+from fastapi import UploadFile
+
+from app.constants import DocumentMimeType
+from app.constants.messages.file import FileErrorMessage
+from app.exceptions.file import FileNameError
+from app.exceptions.file import FileTypeError
+
+
+async def validate_document_file(
+    file: Annotated[UploadFile, File(...)],
+) -> UploadFile:
+    if not file.filename:
+        raise FileNameError(FileErrorMessage.FILENAME_MISSING)
+
+    if not file.content_type or file.content_type not in DocumentMimeType:
+        raise FileTypeError(
+            file_type=file.content_type,
+            allowed_types=list(DocumentMimeType),
+        )
+    return file
