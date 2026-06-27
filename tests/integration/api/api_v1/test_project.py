@@ -29,7 +29,7 @@ async def test_create_project_returns_201_and_sets_creator_id(
     headers, creator_id = await create_user_headers()
 
     response = await async_client.post(
-        "/projects/", json=project_payload, headers=headers
+        "/projects", json=project_payload, headers=headers
     )
 
     assert response.status_code == status.HTTP_201_CREATED
@@ -59,7 +59,7 @@ async def test_create_project_returns_422_for_invalid_name_boundaries(
     project_payload["name"] = invalid_name
 
     response = await async_client.post(
-        "/projects/", json=project_payload, headers=headers
+        "/projects", json=project_payload, headers=headers
     )
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
@@ -70,7 +70,7 @@ async def test_create_project_returns_401_without_bearer_token(
     async_client: AsyncClient,
     project_payload: dict[str, Any],
 ) -> None:
-    response = await async_client.post("/projects/", json=project_payload)
+    response = await async_client.post("/projects", json=project_payload)
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
@@ -83,7 +83,7 @@ async def test_create_project_accepts_missing_description(
     del project_payload["description"]
 
     response = await async_client.post(
-        "/projects/", json=project_payload, headers=headers
+        "/projects", json=project_payload, headers=headers
     )
 
     assert response.status_code == status.HTTP_201_CREATED
@@ -151,7 +151,7 @@ async def test_update_project_returns_200_for_owner(
     update_payload = ProjectUpdateReqFactory.build().model_dump()
 
     update_resp = await async_client.put(
-        f"/projects/{project_id}", json=update_payload, headers=headers
+        f"/projects/{project_id}/info", json=update_payload, headers=headers
     )
 
     assert update_resp.status_code == status.HTTP_200_OK
@@ -177,7 +177,7 @@ async def test_update_project_returns_200_for_participant(
 
     update_payload = ProjectUpdateReqFactory.build().model_dump()
     update_resp = await async_client.put(
-        f"/projects/{project_id}", json=update_payload, headers=participant_headers
+        f"/projects/{project_id}/info", json=update_payload, headers=participant_headers
     )
 
     assert update_resp.status_code == status.HTTP_200_OK
@@ -195,7 +195,7 @@ async def test_update_project_returns_403_for_non_member(
     update_payload = ProjectUpdateReqFactory.build().model_dump()
 
     update_resp = await async_client.put(
-        f"/projects/{project_id}", json=update_payload, headers=intruder_headers
+        f"/projects/{project_id}/info", json=update_payload, headers=intruder_headers
     )
 
     assert update_resp.status_code == status.HTTP_403_FORBIDDEN
@@ -205,6 +205,6 @@ async def test_update_project_returns_401_without_token(
     async_client: AsyncClient,
 ) -> None:
     update_payload = ProjectUpdateReqFactory.build().model_dump()
-    resp = await async_client.put("/projects/10", json=update_payload)
+    resp = await async_client.put("/projects/10/info", json=update_payload)
 
     assert resp.status_code == status.HTTP_401_UNAUTHORIZED

@@ -29,7 +29,7 @@ async def created_project(
     owner_headers, owner_id = await create_user_headers()
 
     response = await async_client.post(
-        "/projects/", json=project_payload, headers=owner_headers
+        "/projects", json=project_payload, headers=owner_headers
     )
     project_id = response.json()["id"]
 
