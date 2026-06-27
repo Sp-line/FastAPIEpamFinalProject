@@ -4,12 +4,12 @@ from dishka import FromDishka  # noqa: TC002
 from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import File
 from fastapi import UploadFile
 from fastapi import status
 from pydantic import PositiveInt  # noqa: TC002
 
 from app.dependencies.auth import get_current_user_id
+from app.dependencies.file import validate_document_file
 from app.schemas.document import DocumentCreateReq
 from app.schemas.document import DocumentDownload
 from app.schemas.document import DocumentRead
@@ -28,7 +28,7 @@ router = APIRouter(route_class=DishkaRoute)
 )
 async def create_document(
     project_id: PositiveInt,
-    file: Annotated[UploadFile, File(...)],
+    file: Annotated[UploadFile, Depends(validate_document_file)],
     current_user_id: Annotated[PositiveInt, Depends(get_current_user_id)],
     document_create_usage: FromDishka[DocumentCreateUsage],
 ) -> DocumentRead:
@@ -79,7 +79,7 @@ async def list_documents(
 )
 async def update_document(
     document_id: PositiveInt,
-    file: Annotated[UploadFile, File(...)],
+    file: Annotated[UploadFile, Depends(validate_document_file)],
     document_update_usage: FromDishka[DocumentUpdateUsage],
     current_user_id: Annotated[PositiveInt, Depends(get_current_user_id)],
 ) -> DocumentRead:

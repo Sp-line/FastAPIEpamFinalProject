@@ -1,5 +1,6 @@
 import logging
 from typing import TYPE_CHECKING
+from typing import cast
 
 from botocore.exceptions import BotoCoreError
 from botocore.exceptions import ClientError
@@ -10,11 +11,7 @@ if TYPE_CHECKING:
     from fastapi import UploadFile
     from pydantic import PositiveInt
 
-from app.constants import DocumentMimeType
-from app.constants.messages.file import FileErrorMessage
 from app.exceptions.db import ObjectNotFoundError
-from app.exceptions.file import FileNameError
-from app.exceptions.file import FileTypeError
 from app.repositories.document import DocumentRepository  # noqa: TC001
 from app.repositories.project_member import (
     ProjectMemberAssociationRepository,  # noqa: TC001
@@ -52,15 +49,6 @@ class DocumentUpdateUsage:
         file: UploadFile,
         current_user_id: PositiveInt,
     ) -> DocumentRead:
-        if not file.filename:
-            raise FileNameError(FileErrorMessage.FILENAME_MISSING)
-
-        if not file.content_type or file.content_type not in DocumentMimeType:
-            raise FileTypeError(
-                file_type=file.content_type,
-                allowed_types=list(DocumentMimeType),
-            )
-
         async with self._uow:
             if not (old_obj := await self._repo.get_by_id(document_id)):
                 raise ObjectNotFoundError(obj_id=document_id, table_name="documents")
@@ -73,17 +61,16 @@ class DocumentUpdateUsage:
             role = member_association.role if member_association is not None else None
             self._ensure_can_update_document(role)
 
-            old_s3_key = old_obj.s3_key
-            project_id = old_obj.project_id
-
         key_build_data = DocumentKeyBuild(
-            original_name=file.filename,
-            project_id=project_id,
+            original_name=cast("str", file.filename),
+            project_id=old_obj.project_id,
         )
         new_key = self._key_strategy.generate(key_build_data)
 
         await self._storage.upload_file(
-            key=new_key, file_obj=file.file, content_type=file.content_type
+            key=new_key,
+            file_obj=file.file,
+            content_type=cast("str", file.content_type),
         )
 
         try:
@@ -91,7 +78,7 @@ class DocumentUpdateUsage:
                 member_association = (
                     await self._project_member_repo.get_by_user_and_project(
                         user_id=current_user_id,
-                        project_id=project_id,
+                        project_id=old_obj.project_id,
                     )
                 )
 
@@ -116,11 +103,11 @@ class DocumentUpdateUsage:
             raise
 
         try:
-            await self._storage.delete_file(old_s3_key)
+            await self._storage.delete_file(old_obj.s3_key)
         except ClientError, BotoCoreError:
             logger.exception(
                 "Failed to delete old S3 file after successful update. Key: %s",
-                old_s3_key,
+                old_obj.s3_key,
             )
 
         return DocumentRead.model_validate(updated_obj)

@@ -1,5 +1,6 @@
 import logging
 from typing import TYPE_CHECKING
+from typing import cast
 
 from botocore.exceptions import BotoCoreError
 from botocore.exceptions import ClientError
@@ -10,10 +11,6 @@ if TYPE_CHECKING:
     from fastapi import UploadFile
     from pydantic import PositiveInt
 
-from app.constants import DocumentMimeType
-from app.constants.messages.file import FileErrorMessage
-from app.exceptions.file import FileNameError
-from app.exceptions.file import FileTypeError
 from app.repositories.document import DocumentRepository  # noqa: TC001
 from app.repositories.project_member import (
     ProjectMemberAssociationRepository,  # noqa: TC001
@@ -52,15 +49,6 @@ class DocumentCreateUsage:
         file: UploadFile,
         current_user_id: PositiveInt,
     ) -> DocumentRead:
-        if not file.filename:
-            raise FileNameError(FileErrorMessage.FILENAME_MISSING)
-
-        if not file.content_type or file.content_type not in DocumentMimeType:
-            raise FileTypeError(
-                file_type=file.content_type,
-                allowed_types=list(DocumentMimeType),
-            )
-
         async with self._uow:
             member_association = await self._project_member_repo.get_by_user_and_project(
                 user_id=current_user_id,
@@ -71,13 +59,15 @@ class DocumentCreateUsage:
             self._ensure_can_create_document(role)
 
         key_build_data = DocumentKeyBuild(
-            original_name=file.filename,
+            original_name=cast("str", file.filename),
             project_id=data.project_id,
         )
         key = self._key_strategy.generate(key_build_data)
 
         await self._storage.upload_file(
-            key=key, file_obj=file.file, content_type=file.content_type
+            key=key,
+            file_obj=file.file,
+            content_type=cast("str", file.content_type),
         )
 
         try:
@@ -95,7 +85,9 @@ class DocumentCreateUsage:
                 self._ensure_can_create_document(role)
 
                 create_data = DocumentCreateDB(
-                    **data.model_dump(), s3_key=key, original_name=file.filename
+                    **data.model_dump(),
+                    s3_key=key,
+                    original_name=cast("str", file.filename),
                 )
 
                 obj = await self._repo.create(create_data)
