@@ -10,10 +10,12 @@ from pydantic import PositiveInt  # noqa: TC002
 from app.core.config import settings
 from app.dependencies.auth import get_current_user_id
 from app.schemas.project import ProjectCreateReq  # noqa: TC001
+from app.schemas.project import ProjectInfoReadWithDocuments  # noqa: TC001
 from app.schemas.project import ProjectRead  # noqa: TC001
 from app.schemas.project import ProjectUpdateReq  # noqa: TC001
 from app.usages.projects.create import ProjectCreateUsage  # noqa: TC001
 from app.usages.projects.delete import ProjectDeleteUsage  # noqa: TC001
+from app.usages.projects.list import ProjectListInfoUsage  # noqa: TC001
 from app.usages.projects.retrieve import ProjectRetrieveInfoUsage  # noqa: TC001
 from app.usages.projects.update import ProjectUpdateUsage  # noqa: TC001
 
@@ -21,7 +23,7 @@ router = APIRouter(route_class=DishkaRoute, prefix=settings.api.v1.projects)
 
 
 @router.post(
-    "/",
+    "",
     status_code=status.HTTP_201_CREATED,
 )
 async def create_project(
@@ -45,7 +47,7 @@ async def delete_project(
 
 
 @router.put(
-    "/{project_id}",
+    "/{project_id}/info",
 )
 async def update_project(
     project_id: PositiveInt,
@@ -65,3 +67,13 @@ async def retrieve_project_info(
     current_user_id: Annotated[PositiveInt, Depends(get_current_user_id)],
 ) -> ProjectRead:
     return await project_retrieve_info_usage(project_id, current_user_id)
+
+
+@router.get(
+    "",
+)
+async def list_project_info(
+    project_list_info_usage: FromDishka[ProjectListInfoUsage],
+    current_user_id: Annotated[PositiveInt, Depends(get_current_user_id)],
+) -> list[ProjectInfoReadWithDocuments]:
+    return await project_list_info_usage(current_user_id)
