@@ -1,6 +1,3 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
 from typing import Annotated
 
 from dishka import FromDishka  # noqa: TC002
@@ -10,9 +7,7 @@ from fastapi import Depends
 from fastapi import File
 from fastapi import UploadFile
 from fastapi import status
-
-if TYPE_CHECKING:
-    from pydantic import PositiveInt
+from pydantic import PositiveInt  # noqa: TC002
 
 from app.dependencies.auth import get_current_user_id
 from app.schemas.document import DocumentCreateReq
