@@ -22,22 +22,24 @@ class QueryServiceBase[
     def __init__(
         self,
         repository: TQueryRepository,
+        unit_of_work: UnitOfWork,
         table_name: str,
         read_schema: type[TReadSchema],
     ) -> None:
         self._repository = repository
         self._table_name = table_name
         self._read_schema = read_schema
+        self._uow = unit_of_work
 
     async def get_all(self, skip: int = 0, limit: int = 100) -> list[TReadSchema]:
-        return [
-            self._read_schema.model_validate(obj)
-            for obj in await self._repository.get_all(skip, limit)
-        ]
+        async with self._uow:
+            objs = await self._repository.get_all(skip, limit)
+        return [self._read_schema.model_validate(obj) for obj in objs]
 
     async def get_by_id(self, obj_id: int) -> TReadSchema:
-        if not (obj := await self._repository.get_by_id(obj_id)):
-            raise ObjectNotFoundError(obj_id=obj_id, table_name=self._table_name)
+        async with self._uow:
+            if not (obj := await self._repository.get_by_id(obj_id)):
+                raise ObjectNotFoundError(obj_id=obj_id, table_name=self._table_name)
         return self._read_schema.model_validate(obj)
 
 
@@ -59,7 +61,7 @@ class CommandServiceBase[
         db_update_schema: type[TDBUpdateSchema],
     ) -> None:
         self._repository = repository
-        self._uof = unit_of_work
+        self._uow = unit_of_work
         self._table_name = table_name
         self._read_schema = read_schema
         self._db_create_schema = db_create_schema
@@ -67,29 +69,26 @@ class CommandServiceBase[
 
     async def bulk_create(self, data: Iterable[TCreateSchema]) -> list[TReadSchema]:
         bulk_create_data = self._bulk_create_data_transfer(data)
-        async with self._uof:
-            return [
-                self._read_schema.model_validate(obj)
-                for obj in await self._repository.bulk_create(bulk_create_data)
-            ]
+        async with self._uow:
+            objs = await self._repository.bulk_create(bulk_create_data)
+        return [self._read_schema.model_validate(obj) for obj in objs]
 
     async def create(self, data: TCreateSchema) -> TReadSchema:
         create_data = self._create_data_transfer(data)
-        async with self._uof:
-            return self._read_schema.model_validate(
-                await self._repository.create(create_data)
-            )
+        async with self._uow:
+            obj = await self._repository.create(create_data)
+        return self._read_schema.model_validate(obj)
 
     async def update(self, obj_id: int, data: TUpdateSchema) -> TReadSchema:
         update_data = self._update_data_transfer(data)
-        async with self._uof:
+        async with self._uow:
             new_obj = await self._repository.update(obj_id, update_data)
             if not new_obj:
                 raise ObjectNotFoundError(obj_id=obj_id, table_name=self._table_name)
-            return self._read_schema.model_validate(new_obj)
+        return self._read_schema.model_validate(new_obj)
 
     async def delete(self, obj_id: int) -> None:
-        async with self._uof:
+        async with self._uow:
             if not await self._repository.delete(obj_id):
                 raise ObjectNotFoundError(obj_id=obj_id, table_name=self._table_name)
 
@@ -133,7 +132,11 @@ class ServiceBase[
         db_update_schema: type[TDBUpdateSchema],
     ) -> None:
         QueryServiceBase.__init__(
-            self, repository=repository, table_name=table_name, read_schema=read_schema
+            self,
+            repository=repository,
+            unit_of_work=unit_of_work,
+            table_name=table_name,
+            read_schema=read_schema,
         )
         CommandServiceBase.__init__(
             self,
