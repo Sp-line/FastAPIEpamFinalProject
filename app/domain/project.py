@@ -18,3 +18,9 @@ class EnsureCanUpdateProject(EnsureHasRole):
     @property
     def allowed_roles(self) -> set[RoleType]:
         return {RoleType.OWNER, RoleType.PARTICIPANT}
+
+
+class EnsureCanInviteUser(EnsureHasRole):
+    @property
+    def allowed_roles(self) -> set[RoleType]:
+        return {RoleType.OWNER}
