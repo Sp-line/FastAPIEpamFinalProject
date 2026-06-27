@@ -8,6 +8,7 @@ from app.dependencies import InfrastructureProvider
 from app.dependencies import RepositoryProvider
 from app.dependencies import ServiceProvider
 from app.dependencies import UsagesProvider
+from app.dependencies.domain import DomainProvider
 from app.exceptions.handlers import register_exception_handlers
 
 
@@ -22,6 +23,7 @@ def create() -> FastAPI:
         RepositoryProvider(),
         ServiceProvider(),
         UsagesProvider(),
+        DomainProvider(),
     )
 
     setup_fastapi_dishka(container, app)

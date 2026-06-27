@@ -12,6 +12,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: TC002
 
 from app.core.config import settings
+from app.dependencies.domain import DomainProvider
 from app.dependencies.infrastructure import InfrastructureProvider
 from app.dependencies.repositories import RepositoryProvider
 from app.dependencies.services import ServiceProvider
@@ -34,6 +35,7 @@ async def test_app(db_session: AsyncSession) -> AsyncIterator[FastAPI]:
         RepositoryProvider(),
         ServiceProvider(),
         UsagesProvider(),
+        DomainProvider(),
     )
 
     app.state.dishka_container = test_container
