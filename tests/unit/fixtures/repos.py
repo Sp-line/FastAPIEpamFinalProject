@@ -26,3 +26,8 @@ def mock_project_member_repo() -> AsyncMock:
 @pytest.fixture
 def mock_document_repo() -> AsyncMock:
     return AsyncMock(spec=DocumentRepository)
+
+
+@pytest.fixture
+def real_user_repo(mock_session: AsyncMock) -> UserRepository:
+    return UserRepository(session=mock_session)
