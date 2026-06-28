@@ -5,6 +5,7 @@ import pytest
 from app.repositories.document import DocumentRepository
 from app.repositories.project import ProjectRepository
 from app.repositories.project_member import ProjectMemberAssociationRepository
+from app.repositories.unit_of_work import UnitOfWork
 from app.repositories.user import UserRepository
 
 
@@ -31,3 +32,8 @@ def mock_document_repo() -> AsyncMock:
 @pytest.fixture
 def real_user_repo(mock_session: AsyncMock) -> UserRepository:
     return UserRepository(session=mock_session)
+
+
+@pytest.fixture
+def real_uow(mock_session: AsyncMock) -> UnitOfWork:
+    return UnitOfWork(session=mock_session)
