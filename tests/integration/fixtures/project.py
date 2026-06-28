@@ -13,6 +13,9 @@ if TYPE_CHECKING:
     from collections.abc import Coroutine
 
     from httpx import AsyncClient
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.repositories.project import ProjectRepository
 
 
 @pytest.fixture
@@ -34,3 +37,8 @@ async def created_project(
     project_id = response.json()["id"]
 
     return project_id, owner_headers, owner_id
+
+
+@pytest.fixture
+def integration_project_repo(db_session: AsyncSession) -> ProjectRepository:
+    return ProjectRepository(session=db_session)

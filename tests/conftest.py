@@ -5,6 +5,7 @@ pytest_plugins = [
     "tests.fixtures.core_mocks",
     "tests.integration.fixtures.user",
     "tests.integration.fixtures.project",
+    "tests.integration.fixtures.document",
     "tests.unit.fixtures.repos",
     "tests.unit.fixtures.storage",
     "tests.unit.fixtures.domains",
