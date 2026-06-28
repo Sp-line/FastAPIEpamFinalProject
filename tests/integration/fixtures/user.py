@@ -7,6 +7,7 @@ import pytest
 import pytest_asyncio
 from fastapi import status
 
+from app.repositories.user import UserRepository
 from tests.factories.user import UserCreateReqFactory
 
 if TYPE_CHECKING:
@@ -14,6 +15,7 @@ if TYPE_CHECKING:
     from collections.abc import Coroutine
 
     from httpx import AsyncClient
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 @pytest.fixture
@@ -56,3 +58,8 @@ def create_user_headers(
         return {"Authorization": f"Bearer {token}"}, user_id
 
     return _create
+
+
+@pytest.fixture
+def integration_user_repo(db_session: AsyncSession) -> UserRepository:
+    return UserRepository(session=db_session)
