@@ -7,3 +7,4 @@ class ConfigErrorMessage(StrEnum):
     )
     MISSING_LOCAL_EMAIL_CONFIG = "Missing FastAPI Mail config for local/test env."
     MISSING_PROD_EMAIL_CONFIG = "Missing AWS SES config for production env."
+    UNSUPPORTED_ENVIRONMENT = "Unsupported environment: {env}"
