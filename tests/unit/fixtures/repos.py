@@ -42,3 +42,8 @@ def real_uow(mock_session: AsyncMock) -> UnitOfWork:
 @pytest.fixture
 def real_project_repo(mock_session: AsyncMock) -> ProjectRepository:
     return ProjectRepository(session=mock_session)
+
+
+@pytest.fixture
+def real_document_repo(mock_session: AsyncMock) -> DocumentRepository:
+    return DocumentRepository(session=mock_session)
