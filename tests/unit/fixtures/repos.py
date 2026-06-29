@@ -47,3 +47,10 @@ def real_project_repo(mock_session: AsyncMock) -> ProjectRepository:
 @pytest.fixture
 def real_document_repo(mock_session: AsyncMock) -> DocumentRepository:
     return DocumentRepository(session=mock_session)
+
+
+@pytest.fixture
+def real_project_member_repo(
+    mock_session: AsyncMock,
+) -> ProjectMemberAssociationRepository:
+    return ProjectMemberAssociationRepository(session=mock_session)
