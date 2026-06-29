@@ -1,5 +1,10 @@
 import pytest
 
+from app.domain.document import EnsureCanCreateDocument
+from app.domain.document import EnsureCanDeleteDocument
+from app.domain.document import EnsureCanListDocument
+from app.domain.document import EnsureCanRetrieveDocument
+from app.domain.document import EnsureCanUpdateDocument
 from app.domain.project import EnsureCanDeleteProject
 from app.domain.project import EnsureCanRetrieveProject
 from app.domain.project import EnsureCanUpdateProject
@@ -18,3 +23,28 @@ def ensure_can_update_project() -> EnsureCanUpdateProject:
 @pytest.fixture
 def ensure_can_retrieve_project() -> EnsureCanRetrieveProject:
     return EnsureCanRetrieveProject()
+
+
+@pytest.fixture
+def ensure_can_delete_document() -> EnsureCanDeleteDocument:
+    return EnsureCanDeleteDocument()
+
+
+@pytest.fixture
+def ensure_can_update_document() -> EnsureCanUpdateDocument:
+    return EnsureCanUpdateDocument()
+
+
+@pytest.fixture
+def ensure_can_retrieve_document() -> EnsureCanRetrieveDocument:
+    return EnsureCanRetrieveDocument()
+
+
+@pytest.fixture
+def ensure_can_create_document() -> EnsureCanCreateDocument:
+    return EnsureCanCreateDocument()
+
+
+@pytest.fixture
+def ensure_can_list_document() -> EnsureCanListDocument:
+    return EnsureCanListDocument()
