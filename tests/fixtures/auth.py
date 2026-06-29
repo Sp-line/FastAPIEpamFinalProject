@@ -12,11 +12,23 @@ def jwt_secret() -> str:
 
 
 @pytest.fixture
-def jwt_service(jwt_secret: str) -> JWTService:
+def jwt_algorithm() -> JWTAlgorithm:
+    return JWTAlgorithm.HS256
+
+
+@pytest.fixture
+def default_lifetime() -> int:
+    return 3600
+
+
+@pytest.fixture
+def jwt_service(
+    jwt_secret: str, jwt_algorithm: JWTAlgorithm, default_lifetime: int
+) -> JWTService:
     return JWTService(
         secret=SecretStr(jwt_secret),
-        algorithm=JWTAlgorithm.HS256,
-        lifetime_seconds=3600,
+        algorithm=jwt_algorithm,
+        lifetime_seconds=default_lifetime,
     )
 
 
