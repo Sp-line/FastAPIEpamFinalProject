@@ -6,6 +6,7 @@ from app.domain.document import EnsureCanListDocument
 from app.domain.document import EnsureCanRetrieveDocument
 from app.domain.document import EnsureCanUpdateDocument
 from app.domain.project import EnsureCanDeleteProject
+from app.domain.project import EnsureCanInviteUser
 from app.domain.project import EnsureCanRetrieveProject
 from app.domain.project import EnsureCanUpdateProject
 
@@ -16,13 +17,18 @@ def ensure_can_delete_project() -> EnsureCanDeleteProject:
 
 
 @pytest.fixture
-def ensure_can_update_project() -> EnsureCanUpdateProject:
-    return EnsureCanUpdateProject()
+def ensure_can_invite_user() -> EnsureCanInviteUser:
+    return EnsureCanInviteUser()
 
 
 @pytest.fixture
 def ensure_can_retrieve_project() -> EnsureCanRetrieveProject:
     return EnsureCanRetrieveProject()
+
+
+@pytest.fixture
+def ensure_can_update_project() -> EnsureCanUpdateProject:
+    return EnsureCanUpdateProject()
 
 
 @pytest.fixture
