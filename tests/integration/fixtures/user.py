@@ -7,7 +7,9 @@ import pytest
 import pytest_asyncio
 from fastapi import status
 
+from app.core.auth.password import PasswordService
 from app.repositories.user import UserRepository
+from app.services.user import UserService
 from tests.factories.user import UserCreateReqFactory
 
 if TYPE_CHECKING:
@@ -16,6 +18,8 @@ if TYPE_CHECKING:
 
     from httpx import AsyncClient
     from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.repositories.unit_of_work import UnitOfWork
 
 
 @pytest.fixture
@@ -63,3 +67,21 @@ def create_user_headers(
 @pytest.fixture
 def integration_user_repo(db_session: AsyncSession) -> UserRepository:
     return UserRepository(session=db_session)
+
+
+@pytest.fixture
+def password_service() -> PasswordService:
+    return PasswordService()
+
+
+@pytest.fixture
+def integration_user_service(
+    integration_user_repo: UserRepository,
+    real_uow: UnitOfWork,
+    password_service: PasswordService,
+) -> UserService:
+    return UserService(
+        repository=integration_user_repo,
+        unit_of_work=real_uow,
+        password_service=password_service,
+    )
