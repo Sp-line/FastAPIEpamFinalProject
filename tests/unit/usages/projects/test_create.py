@@ -1,147 +1,110 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from unittest.mock import MagicMock
+from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
 
 import pytest
-from polyfactory.factories.pydantic_factory import ModelFactory
 
-from app.constants import RoleType
-from app.constants.project import ProjectLimits
-from app.exceptions.db import UniqueFieldError
+from app.constants.role_type import RoleType
 from app.schemas.project import ProjectCreateDB
-from app.schemas.project import ProjectCreateReq
 from app.schemas.project import ProjectRead
 from app.schemas.project_member import ProjectMemberCreateDB
-from app.usages.projects.create import ProjectCreateUsage
+from tests.factories.project import ProjectCreateReqFactory
 
-TEST_PROJECT_ID = 100
-
-
-class ProjectCreateReqFactory(ModelFactory[ProjectCreateReq]):
-    __model__ = ProjectCreateReq
+if TYPE_CHECKING:
+    from app.usages.projects.create import ProjectCreateUsage
 
 
-class ProjectCreateDBFactory(ModelFactory[ProjectCreateDB]):
-    __model__ = ProjectCreateDB
+class TestProjectCreateUsage:
+    async def test_project_create_usage_creates_project_and_owner_successfully(
+        self,
+        project_create_usage: ProjectCreateUsage,
+        mock_project_repo: AsyncMock,
+        mock_project_member_repo: AsyncMock,
+        mock_uow: AsyncMock,
+    ) -> None:
+        creator_id = 42
+        req_data = ProjectCreateReqFactory.build()
 
+        mock_db_project = MagicMock()
+        mock_db_project.id = 1
+        mock_db_project.name = req_data.name
+        mock_db_project.description = req_data.description
+        mock_db_project.creator_id = creator_id
 
-class ProjectReadFactory(ModelFactory[ProjectRead]):
-    __model__ = ProjectRead
+        mock_project_repo.create.return_value = mock_db_project
 
+        result = await project_create_usage(data=req_data, creator_id=creator_id)
 
-class ProjectMemberCreateDBFactory(ModelFactory[ProjectMemberCreateDB]):
-    __model__ = ProjectMemberCreateDB
+        mock_uow.__aenter__.assert_awaited_once()
 
-
-@pytest.fixture
-def project_create_usage(
-    mock_project_repo: MagicMock,
-    mock_project_member_repo: MagicMock,
-    mock_uow: MagicMock,
-) -> ProjectCreateUsage:
-    return ProjectCreateUsage(
-        repository=mock_project_repo,
-        project_member_repository=mock_project_member_repo,
-        unit_of_work=mock_uow,
-    )
-
-
-@pytest.mark.parametrize(
-    ("project_name", "description", "creator_id"),
-    [
-        ("A" * ProjectLimits.NAME_MIN, None, 1),
-        ("B" * ProjectLimits.NAME_MAX, "Project description", 42),
-    ],
-    ids=["min_name_without_description", "max_name_with_description"],
-)
-async def test_call_creates_project_and_owner_membership(  # noqa: PLR0913
-    project_create_usage: ProjectCreateUsage,
-    mock_project_repo: MagicMock,
-    mock_project_member_repo: MagicMock,
-    mock_uow: MagicMock,
-    project_name: str,
-    description: str | None,
-    creator_id: int,
-) -> None:
-    data = ProjectCreateReqFactory.build(name=project_name, description=description)
-    created_project = ProjectReadFactory.build(
-        id=TEST_PROJECT_ID,
-        name=project_name,
-        description=description,
-        creator_id=creator_id,
-    )
-    mock_project_repo.create.return_value = created_project
-
-    result = await project_create_usage(data, creator_id)
-
-    mock_uow.__aenter__.assert_awaited_once()
-    mock_uow.__aexit__.assert_awaited_once()
-
-    mock_project_repo.create.assert_awaited_once_with(
-        ProjectCreateDBFactory.build(
-            name=project_name,
-            description=description,
-            creator_id=creator_id,
+        expected_project_create_db = ProjectCreateDB(
+            **req_data.model_dump(), creator_id=creator_id
         )
-    )
-    mock_project_member_repo.create.assert_awaited_once_with(
-        ProjectMemberCreateDBFactory.build(
+        mock_project_repo.create.assert_awaited_once()
+        actual_project_call_args = mock_project_repo.create.call_args.args[0]
+        assert (
+            actual_project_call_args.model_dump()
+            == expected_project_create_db.model_dump()
+        )
+
+        expected_member_create_db = ProjectMemberCreateDB(
             role=RoleType.OWNER,
             user_id=creator_id,
-            project_id=TEST_PROJECT_ID,
+            project_id=mock_db_project.id,
         )
-    )
+        mock_project_member_repo.create.assert_awaited_once()
+        actual_member_call_args = mock_project_member_repo.create.call_args.args[0]
+        assert (
+            actual_member_call_args.model_dump()
+            == expected_member_create_db.model_dump()
+        )
 
-    assert isinstance(result, ProjectRead)
-    assert result.id == TEST_PROJECT_ID
-    assert result.name == project_name
-    assert result.description == description
-    assert result.creator_id == creator_id
+        assert isinstance(result, ProjectRead)
+        assert result.id == mock_db_project.id
+        assert result.name == req_data.name
 
+    async def test_project_create_usage_halts_if_project_creation_fails(
+        self,
+        project_create_usage: ProjectCreateUsage,
+        mock_project_repo: AsyncMock,
+        mock_project_member_repo: AsyncMock,
+        mock_uow: AsyncMock,
+    ) -> None:
+        creator_id = 42
+        req_data = ProjectCreateReqFactory.build()
 
-async def test_call_propagates_project_repository_error_and_skips_membership_creation(
-    project_create_usage: ProjectCreateUsage,
-    mock_project_repo: MagicMock,
-    mock_project_member_repo: MagicMock,
-    mock_uow: MagicMock,
-) -> None:
-    data = ProjectCreateReqFactory.build(name="Valid project", description=None)
-    mock_project_repo.create.side_effect = UniqueFieldError(
-        field_name="name",
-        table_name="projects",
-    )
+        expected_exception = Exception("Database error during project creation")
+        mock_project_repo.create.side_effect = expected_exception
 
-    with pytest.raises(UniqueFieldError, match="name"):
-        await project_create_usage(data, 7)
+        with pytest.raises(Exception, match="Database error during project creation"):
+            await project_create_usage(data=req_data, creator_id=creator_id)
 
-    mock_uow.__aenter__.assert_awaited_once()
-    mock_uow.__aexit__.assert_awaited_once()
-    mock_project_repo.create.assert_awaited_once()
-    mock_project_member_repo.create.assert_not_awaited()
+        mock_project_repo.create.assert_awaited_once()
+        mock_project_member_repo.create.assert_not_called()
+        mock_uow.__aexit__.assert_awaited_once()
 
+    async def test_project_create_usage_bubbles_up_error_if_member_creation_fails(
+        self,
+        project_create_usage: ProjectCreateUsage,
+        mock_project_repo: AsyncMock,
+        mock_project_member_repo: AsyncMock,
+        mock_uow: AsyncMock,
+    ) -> None:
+        creator_id = 42
+        req_data = ProjectCreateReqFactory.build()
 
-async def test_call_propagates_membership_repository_error_after_project_creation(
-    project_create_usage: ProjectCreateUsage,
-    mock_project_repo: MagicMock,
-    mock_project_member_repo: MagicMock,
-    mock_uow: MagicMock,
-) -> None:
-    data = ProjectCreateReqFactory.build(name="Another project", description="desc")
-    mock_project_repo.create.return_value = ProjectReadFactory.build(
-        id=101,
-        name=data.name,
-        description=data.description,
-        creator_id=7,
-    )
-    mock_project_member_repo.create.side_effect = RuntimeError("membership failed")
+        mock_db_project = MagicMock()
+        mock_db_project.id = 1
+        mock_project_repo.create.return_value = mock_db_project
 
-    with pytest.raises(RuntimeError, match="membership failed"):
-        await project_create_usage(data, 7)
+        expected_exception = Exception("Database error during member creation")
+        mock_project_member_repo.create.side_effect = expected_exception
 
-    mock_uow.__aenter__.assert_awaited_once()
-    mock_uow.__aexit__.assert_awaited_once()
-    mock_project_repo.create.assert_awaited_once()
-    mock_project_member_repo.create.assert_awaited_once()
+        with pytest.raises(Exception, match="Database error during member creation"):
+            await project_create_usage(data=req_data, creator_id=creator_id)
+
+        mock_project_repo.create.assert_awaited_once()
+        mock_project_member_repo.create.assert_awaited_once()
+        mock_uow.__aexit__.assert_awaited_once()

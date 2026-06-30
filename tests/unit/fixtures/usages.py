@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 import pytest
 from fastapi.security import OAuth2PasswordRequestForm
 
+from app.usages.projects.create import ProjectCreateUsage
 from app.usages.users.login import UserLoginUsage
 
 if TYPE_CHECKING:
@@ -36,4 +37,17 @@ def login_use_case(
         unit_of_work=mock_uow,
         jwt_service=mock_jwt_service,
         password_service=mock_password_service,
+    )
+
+
+@pytest.fixture
+def project_create_usage(
+    mock_project_repo: AsyncMock,
+    mock_project_member_repo: AsyncMock,
+    mock_uow: AsyncMock,
+) -> ProjectCreateUsage:
+    return ProjectCreateUsage(
+        repository=mock_project_repo,
+        project_member_repository=mock_project_member_repo,
+        unit_of_work=mock_uow,
     )
