@@ -5,11 +5,8 @@ import aioboto3
 from dishka import Provider
 from dishka import Scope
 from dishka import provide
-from fastapi_mail import ConnectionConfig
-from fastapi_mail import FastMail
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
-from pydantic import SecretStr
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: TC002
 from types_aiobotocore_s3 import S3Client  # noqa: TC002
 from types_aiobotocore_ses import SESClient  # noqa: TC002
@@ -80,37 +77,22 @@ class InfrastructureProvider(Provider):
     @provide(scope=Scope.APP)
     async def get_ses_client(
         self, session: aioboto3.Session
-    ) -> AsyncIterator[SESClient | None]:
-        if settings.email.ses:
-            async with session.client(
-                "ses", region_name=settings.email.ses.region
-            ) as client:
-                yield client
-        else:
-            yield None
+    ) -> AsyncIterator[SESClient]:
+        client_kwargs: dict[str, Any] = {
+            "service_name": "ses",
+            "region_name": settings.email.ses.region,
+        }
 
-    @provide(scope=Scope.APP)
-    def get_fast_mail(self) -> FastMail | None:
-        if settings.email.fastapi:
-            conn_conf = ConnectionConfig(
-                MAIL_USERNAME=settings.email.fastapi.mail_username or "",
-                MAIL_PASSWORD=settings.email.fastapi.mail_password or SecretStr(""),
-                MAIL_SERVER=settings.email.fastapi.mail_server,
-                MAIL_PORT=settings.email.fastapi.mail_port,
-                MAIL_FROM=settings.email.fastapi.mail_from,
-                MAIL_FROM_NAME=settings.email.fastapi.mail_from_name,
-                MAIL_STARTTLS=settings.email.fastapi.mail_starttls,
-                MAIL_SSL_TLS=settings.email.fastapi.mail_ssl_tls,
-                MAIL_DEBUG=settings.email.fastapi.mail_debug,
-                SUPPRESS_SEND=settings.email.fastapi.suppress_send,
-                USE_CREDENTIALS=settings.email.fastapi.use_credentials,
-                VALIDATE_CERTS=settings.email.fastapi.validate_certs,
-                TIMEOUT=settings.email.fastapi.timeout,
-                LOCAL_HOSTNAME=settings.email.fastapi.local_hostname,
-                CERT_BUNDLE=settings.email.fastapi.cert_bundle,
-                TEMPLATE_FOLDER=settings.templates.path,
+        if settings.env in {EnvironmentType.LOCAL, EnvironmentType.TEST}:
+            client_kwargs.update(
+                {
+                    "endpoint_url": str(settings.email.ses.endpoint_url),
+                    "aws_access_key_id": str(settings.email.ses.access_key),
+                    "aws_secret_access_key": str(settings.email.ses.secret_key),
+                }
             )
-            return FastMail(conn_conf)
-        return None
+
+        async with session.client(**client_kwargs) as client:
+            yield client
 
     get_document_key_strategy = provide(DocumentKeyStrategy, scope=Scope.APP)

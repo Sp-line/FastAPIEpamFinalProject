@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
-from pydantic import EmailStr
 from pydantic import HttpUrl
 from pydantic import PostgresDsn
 from pydantic import SecretStr
@@ -93,36 +92,17 @@ class AuthConfig(BaseModel):
     lifetime_seconds: int = 60 * 60
 
 
-class FastAPIMailConfig(BaseModel):
-    mail_server: str
-    mail_port: int
-    mail_from: EmailStr
-    mail_starttls: bool
-    mail_ssl_tls: bool
-    use_credentials: bool
-    validate_certs: bool
-
-    mail_username: str | None = None
-    mail_password: SecretStr | None = None
-
-    mail_from_name: str | None = None
-    mail_debug: int = 0
-    suppress_send: int = 0
-    timeout: int = 60
-    local_hostname: str | None = None
-    cert_bundle: str | None = None
-
-
 class SESMailConfig(BaseModel):
     region: str
     sender: str
+    endpoint_url: HttpUrl | None = None
+    access_key: str | None = None
+    secret_key: str | None = None
 
 
 class EmailConfig(BaseModel):
     app_domain: str
-
-    fastapi: FastAPIMailConfig | None = None
-    ses: SESMailConfig | None = None
+    ses: SESMailConfig
 
 
 class TemplatesConfig(BaseModel):
@@ -151,31 +131,34 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_s3_credentials_for_env(self) -> Self:
-        env_depends_on_minio = self.env in {EnvironmentType.LOCAL, EnvironmentType.TEST}
-        missing_minio_credentials = not all(
+        env_depends_on_localstack = self.env in {
+            EnvironmentType.LOCAL,
+            EnvironmentType.TEST,
+        }
+        missing_credentials = not all(
             [self.s3.access_key, self.s3.secret_key, self.s3.endpoint_url]
         )
 
-        if env_depends_on_minio and missing_minio_credentials:
+        if env_depends_on_localstack and missing_credentials:
             raise ValueError(ConfigErrorMessage.LOCAL_S3_MISSING_CREDENTIALS)
         return self
 
     @model_validator(mode="after")
     def validate_email_credentials_for_env(self) -> Self:
-        env_depends_on_fastapi_mail = self.env in {
+        env_depends_on_localstack = self.env in {
             EnvironmentType.LOCAL,
             EnvironmentType.TEST,
         }
-        fastapi_mail = self.email.fastapi
+        missing_credentials = not all(
+            [
+                self.email.ses.access_key,
+                self.email.ses.secret_key,
+                self.email.ses.endpoint_url,
+            ]
+        )
 
-        if env_depends_on_fastapi_mail and fastapi_mail is None:
-            raise ValueError(ConfigErrorMessage.MISSING_LOCAL_EMAIL_CONFIG)
-
-        env_depends_on_ses = self.env == EnvironmentType.PROD
-        ses = self.email.ses
-
-        if env_depends_on_ses and ses is None:
-            raise ValueError(ConfigErrorMessage.MISSING_PROD_EMAIL_CONFIG)
+        if env_depends_on_localstack and missing_credentials:
+            raise ValueError(ConfigErrorMessage.LOCAL_SES_MISSING_CREDENTIALS)
 
         return self
 

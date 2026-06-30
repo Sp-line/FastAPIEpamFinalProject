@@ -7,16 +7,13 @@ services:
       - app/.env
     environment:
       - APP_CONFIG__DB__HOST=db
-      - APP_CONFIG__S3__ENDPOINT_URL=http://minio:9000
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
-      minio-setup:
-        condition: service_completed_successfully
-      mailpit:
-        condition: service_started
+      localstack:
+        condition: service_healthy
     command: [ "uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
     develop:
       watch:
@@ -43,52 +40,27 @@ services:
       timeout: 3s
       retries: 3
 
-  minio:
-    image: minio/minio
-    container_name: epam_minio
+  localstack:
+    image: localstack/localstack:3.7.2
+    container_name: epam_localstack
     ports:
-      - "9000:9000"
-    env_file:
-      - app/.env
-    command: server /data
+      - "127.0.0.1:4566:4566"
+    environment:
+      - EULA=1
+      - DEBUG=1
+      - DISABLE_AUTO_UPGRADE=1
+      - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
-      - minio_data_storage:/data
-
-  minio-setup:
-    image: minio/mc
-    container_name: epam_minio_setup
-    depends_on:
-      - minio
-    env_file:
-      - app/.env
-    entrypoint: >
-      /bin/sh -c "
-      sleep 3;
-      /usr/bin/mc alias set myminio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
-      /usr/bin/mc mb myminio/$$APP_CONFIG__S3__BUCKET_NAME || true;
-      exit 0;
-      "
-
-  openmaxio-console:
-    image: juacarsud/openmaxio-browser:dev
-    container_name: epam_minio_console
-    ports:
-      - "9090:9090"
-    env_file:
-      - app/.env
-    depends_on:
-      - minio
-
-  mailpit:
-    image: axllent/mailpit
-    container_name: epam_mailpit
-    restart: unless-stopped
-    ports:
-      - "8025:8025"
-      - "1025:1025"
-    env_file:
-      - app/.env
+      - localstack_data_storage:/var/lib/localstack
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - ./infrastructure/localstack/local-template.yaml:/etc/localstack/init/ready.d/local-template.yaml:ro
+      - ./infrastructure/localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh:ro
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:4566/_localstack/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   pg_data_storage:
-  minio_data_storage:
+  localstack_data_storage:
