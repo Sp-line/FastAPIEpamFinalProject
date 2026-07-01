@@ -8,6 +8,7 @@ __all__ = (
     "ProjectLimits",
     "ProjectMemberLimits",
     "RoleType",
+    "TokenType",
     "UserLimits",
 )
 
@@ -20,4 +21,5 @@ from app.constants.env_type import EnvironmentType
 from app.constants.project import ProjectLimits
 from app.constants.project_member import ProjectMemberLimits
 from app.constants.role_type import RoleType
+from app.constants.token import TokenType
 from app.constants.user import UserLimits
