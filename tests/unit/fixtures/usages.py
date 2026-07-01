@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 import pytest
 from fastapi.security import OAuth2PasswordRequestForm
 
+from app.usages.documents.delete import DocumentDeleteUsage
 from app.usages.documents.list import DocumentListUsage
 from app.usages.projects.create import ProjectCreateUsage
 from app.usages.projects.delete import ProjectDeleteUsage
@@ -150,4 +151,21 @@ def document_list_usage(
         project_member_repository=mock_project_member_repo,
         unit_of_work=mock_uow,
         ensure_can_list_document=mock_ensure_can_list_document,
+    )
+
+
+@pytest.fixture
+def document_delete_usage(
+    mock_document_repo: AsyncMock,
+    mock_uow: AsyncMock,
+    mock_project_member_repo: AsyncMock,
+    mock_s3_storage: AsyncMock,
+    mock_ensure_can_delete_document: MagicMock,
+) -> DocumentDeleteUsage:
+    return DocumentDeleteUsage(
+        repository=mock_document_repo,
+        unit_of_work=mock_uow,
+        project_member_repository=mock_project_member_repo,
+        s3_storage=mock_s3_storage,
+        ensure_can_delete_document=mock_ensure_can_delete_document,
     )
