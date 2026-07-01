@@ -22,7 +22,6 @@ class ServiceProvider(Provider):
         return JWTService(
             secret=settings.auth.secret,
             algorithm=settings.auth.algorithm,
-            lifetime_seconds=settings.auth.lifetime_seconds,
         )
 
     get_user_service = provide(UserService)

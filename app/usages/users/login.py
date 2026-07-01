@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from core.config import settings
+
 if TYPE_CHECKING:
     from fastapi.security import OAuth2PasswordRequestForm
 
@@ -37,6 +39,9 @@ class UserLoginUsage:
             raise InvalidCredentialsError
 
         token_payload = JWTPayload(sub=str(user.id))
-        access_token = self._jwt_service.create_access_token(payload=token_payload)
+        access_token = self._jwt_service.create_access_token(
+            payload=token_payload,
+            lifetime_seconds=settings.auth.access_lifetime_seconds,
+        )
 
         return Token(access_token=access_token)

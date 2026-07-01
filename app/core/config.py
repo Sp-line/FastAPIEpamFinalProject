@@ -89,7 +89,9 @@ class S3Config(BaseModel):
 class AuthConfig(BaseModel):
     secret: SecretStr
     algorithm: JWTAlgorithm = JWTAlgorithm.HS256
-    lifetime_seconds: int = 60 * 60
+
+    access_lifetime_seconds: int = 60 * 60
+    invite_lifetime_seconds: int = 60 * 60 * 72
 
 
 class SESMailConfig(BaseModel):
