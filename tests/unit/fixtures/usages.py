@@ -7,6 +7,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.usages.projects.create import ProjectCreateUsage
 from app.usages.projects.delete import ProjectDeleteUsage
+from app.usages.projects.update import ProjectUpdateUsage
 from app.usages.users.login import UserLoginUsage
 
 if TYPE_CHECKING:
@@ -70,4 +71,19 @@ def project_delete_usage(  # noqa: PLR0913
         document_repository=mock_document_repo,
         s3_storage=mock_s3_storage,
         ensure_can_delete_project=mock_ensure_can_delete_project,
+    )
+
+
+@pytest.fixture
+def project_update_usage(
+    mock_project_repo: AsyncMock,
+    mock_project_member_repo: AsyncMock,
+    mock_uow: AsyncMock,
+    mock_ensure_can_update_project: MagicMock,
+) -> ProjectUpdateUsage:
+    return ProjectUpdateUsage(
+        repository=mock_project_repo,
+        project_member_repository=mock_project_member_repo,
+        unit_of_work=mock_uow,
+        ensure_can_update_project=mock_ensure_can_update_project,
     )
