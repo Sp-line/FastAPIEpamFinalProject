@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Invitation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f6f9fc;
+            margin: 0;
+            padding: 0;
+        }
+
+        .wrapper {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e0e6ed;
+        }
+
+        .header {
+            background-color: #0056b3;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h2 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .content {
+            padding: 40px;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #0056b3;
+            color: #ffffff !important;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin: 25px 0;
+        }
+
+        .link-box {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 6px;
+            word-break: break-all;
+            font-size: 13px;
+            color: #718096;
+            margin-top: 20px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #a0aec0;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <div class="header">
+        <h2>Epam Project Management</h2>
+    </div>
+    <div class="content">
+        <h3 style="color: #2d3748;">Hello!</h3>
+        <p>You have been invited to collaborate on a project.</p>
+        <p>Click the button below to accept the invitation. This link is secure and will expire in <strong>{{
+            invite_hours }} hours</strong>.</p>
+
+        <div style="text-align: center;">
+            <a href="{{ join_link }}" class="btn">Join the Project</a>
+        </div>
+
+        <p style="margin-top: 30px;">If the button doesn't work, copy and paste this link into your browser:</p>
+        <div class="link-box">{{ join_link }}</div>
+
+        <p style="margin-top: 20px;">If you weren't expecting this, you can safely ignore this email.</p>
+    </div>
+    <div class="footer">
+        &copy; 2026 Epam Project Management. All rights reserved.
+    </div>
+</div>
+</body>
+</html>
