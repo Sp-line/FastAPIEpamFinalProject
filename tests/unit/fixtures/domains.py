@@ -79,3 +79,8 @@ def mock_ensure_can_retrieve_project() -> MagicMock:
 @pytest.fixture
 def mock_ensure_can_invite_user() -> MagicMock:
     return MagicMock()
+
+
+@pytest.fixture
+def mock_ensure_can_list_document() -> MagicMock:
+    return MagicMock()

@@ -1,6 +1,7 @@
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 from app.schemas.document import DocumentCreateDB
+from app.schemas.document import DocumentRead
 from app.schemas.document import DocumentUpdateDB
 from app.schemas.storage import DocumentKeyBuild
 
@@ -15,3 +16,7 @@ class DocumentUpdateDBFactory(ModelFactory[DocumentUpdateDB]):
 
 class DocumentKeyBuildFactory(ModelFactory[DocumentKeyBuild]):
     __model__ = DocumentKeyBuild
+
+
+class DocumentReadFactory(ModelFactory[DocumentRead]):
+    __model__ = DocumentRead
