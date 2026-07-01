@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 from fastapi.security import OAuth2PasswordRequestForm
+from usages.projects.list import ProjectListInfoUsage
 
 from app.usages.projects.create import ProjectCreateUsage
 from app.usages.projects.delete import ProjectDeleteUsage
@@ -86,4 +87,19 @@ def project_update_usage(
         project_member_repository=mock_project_member_repo,
         unit_of_work=mock_uow,
         ensure_can_update_project=mock_ensure_can_update_project,
+    )
+
+
+@pytest.fixture
+def project_list_info_usage(
+    mock_project_repo: AsyncMock,
+    mock_project_member_repo: AsyncMock,
+    mock_uow: AsyncMock,
+    mock_ensure_can_retrieve_project: MagicMock,
+) -> ProjectListInfoUsage:
+    return ProjectListInfoUsage(
+        repository=mock_project_repo,
+        project_member_repository=mock_project_member_repo,
+        unit_of_work=mock_uow,
+        ensure_can_retrieve_project=mock_ensure_can_retrieve_project,
     )

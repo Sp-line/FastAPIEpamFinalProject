@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from app.constants.role_type import RoleType
 from app.domain.document import EnsureCanCreateDocument
 from app.domain.document import EnsureCanDeleteDocument
 from app.domain.document import EnsureCanListDocument
@@ -66,3 +67,10 @@ def mock_ensure_can_delete_project() -> MagicMock:
 @pytest.fixture
 def mock_ensure_can_update_project() -> MagicMock:
     return MagicMock()
+
+
+@pytest.fixture
+def mock_ensure_can_retrieve_project() -> MagicMock:
+    mock = MagicMock()
+    mock.allowed_roles = {RoleType.OWNER, RoleType.PARTICIPANT}
+    return mock
