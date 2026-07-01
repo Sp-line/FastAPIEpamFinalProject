@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 import pytest
 
 from app.domain.document import EnsureCanCreateDocument
@@ -54,3 +56,8 @@ def ensure_can_create_document() -> EnsureCanCreateDocument:
 @pytest.fixture
 def ensure_can_list_document() -> EnsureCanListDocument:
     return EnsureCanListDocument()
+
+
+@pytest.fixture
+def mock_ensure_can_delete_project() -> MagicMock:
+    return MagicMock()
