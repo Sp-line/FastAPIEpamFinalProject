@@ -45,10 +45,6 @@ class TestDBConfig(BaseModel):
     driver: DBDriver = DBDriver.ASYNCPG
 
 
-class TestAPIConfig(BaseModel):
-    base_url: HttpUrl = HttpUrl("http://test")
-
-
 class DatabaseConfig(BaseModel):
     host: str
     port: int = 5432
@@ -103,21 +99,20 @@ class SESMailConfig(BaseModel):
 
 
 class EmailConfig(BaseModel):
-    app_domain: str
     ses: SESMailConfig
 
 
-class TemplatesConfig(BaseModel):
+class TemplateConfig(BaseModel):
     path: Path = BASE_DIR / "templates"
 
 
 class Settings(BaseSettings):
+    base_url: HttpUrl
     env: EnvironmentType = EnvironmentType.LOCAL
     run: RunConfig = RunConfig()
     api: ApiPrefix = ApiPrefix()
     test_db: TestDBConfig = TestDBConfig()
-    test_api: TestAPIConfig = TestAPIConfig()
-    templates: TemplatesConfig = TemplatesConfig()
+    template: TemplateConfig = TemplateConfig()
     db: DatabaseConfig
     s3: S3Config
     auth: AuthConfig

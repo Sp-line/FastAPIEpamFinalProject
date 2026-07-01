@@ -71,7 +71,7 @@ class InfrastructureProvider(Provider):
     @provide(scope=Scope.APP)
     def get_jinja_env(self) -> Environment:
         return Environment(
-            loader=FileSystemLoader(str(settings.templates.path)), autoescape=True
+            loader=FileSystemLoader(str(settings.template.path)), autoescape=True
         )
 
     @provide(scope=Scope.APP)

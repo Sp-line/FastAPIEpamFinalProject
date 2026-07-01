@@ -50,7 +50,7 @@ async def async_client(test_app: FastAPI) -> AsyncIterator[AsyncClient]:
     transport = ASGITransport(app=test_app)
 
     base_url = (
-        f"{str(settings.test_api.base_url).rstrip('/')}"
+        f"{str(settings.base_url).rstrip('/')}"
         f"{settings.api.prefix}{settings.api.v1.prefix}"
     )
 

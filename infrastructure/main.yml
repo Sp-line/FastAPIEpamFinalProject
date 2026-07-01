@@ -365,7 +365,7 @@ Resources:
               Value: !Ref "AWS::Region"
             - Name: APP_CONFIG__EMAIL__SES__SENDER
               Value: !Ref SesSenderEmail
-            - Name: APP_CONFIG__EMAIL__APP_DOMAIN
+            - Name: APP_CONFIG__BASE_URL
               Value: !Sub "http://${ApiLoadBalancer.DNSName}"
           Secrets:
             - Name: APP_CONFIG__DB__USER
