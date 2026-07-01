@@ -1,4 +1,5 @@
 from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -15,4 +16,10 @@ def mock_uow() -> AsyncMock:
 
 @pytest.fixture
 def mock_session() -> AsyncMock:
-    return AsyncMock()
+    session = AsyncMock()
+
+    session.add = MagicMock()
+    session.add_all = MagicMock()
+    session.expunge = MagicMock()
+
+    return session
