@@ -89,3 +89,8 @@ def mock_ensure_can_list_document() -> MagicMock:
 @pytest.fixture
 def mock_ensure_can_delete_document() -> MagicMock:
     return MagicMock()
+
+
+@pytest.fixture
+def mock_ensure_can_retrieve_document() -> MagicMock:
+    return MagicMock()

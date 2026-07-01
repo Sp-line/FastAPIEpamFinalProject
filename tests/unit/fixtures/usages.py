@@ -7,6 +7,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.usages.documents.delete import DocumentDeleteUsage
 from app.usages.documents.list import DocumentListUsage
+from app.usages.documents.retrieve import DocumentRetrieveUsage
 from app.usages.projects.create import ProjectCreateUsage
 from app.usages.projects.delete import ProjectDeleteUsage
 from app.usages.projects.invite import ProjectInviteUsage
@@ -168,4 +169,21 @@ def document_delete_usage(
         project_member_repository=mock_project_member_repo,
         s3_storage=mock_s3_storage,
         ensure_can_delete_document=mock_ensure_can_delete_document,
+    )
+
+
+@pytest.fixture
+def document_retrieve_usage(
+    mock_document_repo: AsyncMock,
+    mock_project_member_repo: AsyncMock,
+    mock_uow: AsyncMock,
+    mock_s3_storage: AsyncMock,
+    mock_ensure_can_retrieve_document: MagicMock,
+) -> DocumentRetrieveUsage:
+    return DocumentRetrieveUsage(
+        repository=mock_document_repo,
+        project_member_repository=mock_project_member_repo,
+        unit_of_work=mock_uow,
+        s3_storage=mock_s3_storage,
+        ensure_can_retrieve_document=mock_ensure_can_retrieve_document,
     )
