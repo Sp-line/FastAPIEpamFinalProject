@@ -4,6 +4,7 @@ from annotated_types import MaxLen
 from annotated_types import MinLen
 from pydantic import BaseModel
 from pydantic import ConfigDict
+from pydantic import EmailStr
 from pydantic import PositiveInt
 
 from app.constants.project import ProjectLimits
@@ -55,3 +56,7 @@ class ProjectInfoReadWithDocuments(ProjectRead):
 
 class ProjectInviteReq(BaseModel):
     username: Username
+
+
+class ProjectShareReq(BaseModel):
+    email: EmailStr
