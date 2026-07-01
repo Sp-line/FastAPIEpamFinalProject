@@ -7,6 +7,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.usages.projects.create import ProjectCreateUsage
 from app.usages.projects.delete import ProjectDeleteUsage
+from app.usages.projects.invite import ProjectInviteUsage
 from app.usages.projects.list import ProjectListInfoUsage
 from app.usages.projects.retrieve import ProjectRetrieveInfoUsage
 from app.usages.projects.update import ProjectUpdateUsage
@@ -118,4 +119,19 @@ def project_retrieve_info_usage(
         project_member_repository=mock_project_member_repo,
         unit_of_work=mock_uow,
         ensure_can_retrieve_project=mock_ensure_can_retrieve_project,
+    )
+
+
+@pytest.fixture
+def project_invite_usage(
+    mock_uow: AsyncMock,
+    mock_project_member_repo: AsyncMock,
+    mock_user_repo: AsyncMock,
+    mock_ensure_can_invite_user: MagicMock,
+) -> ProjectInviteUsage:
+    return ProjectInviteUsage(
+        unit_of_work=mock_uow,
+        project_member_repository=mock_project_member_repo,
+        user_repository=mock_user_repo,
+        ensure_can_invite_user=mock_ensure_can_invite_user,
     )

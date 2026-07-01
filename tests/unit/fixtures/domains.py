@@ -74,3 +74,8 @@ def mock_ensure_can_retrieve_project() -> MagicMock:
     mock = MagicMock()
     mock.allowed_roles = {RoleType.OWNER, RoleType.PARTICIPANT}
     return mock
+
+
+@pytest.fixture
+def mock_ensure_can_invite_user() -> MagicMock:
+    return MagicMock()

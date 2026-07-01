@@ -3,6 +3,7 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 from app.schemas.project import ProjectCreateDB
 from app.schemas.project import ProjectCreateReq
 from app.schemas.project import ProjectInfoReadWithDocuments
+from app.schemas.project import ProjectInviteReq
 from app.schemas.project import ProjectRead
 from app.schemas.project import ProjectUpdateDB
 from app.schemas.project import ProjectUpdateReq
@@ -30,3 +31,7 @@ class ProjectInfoReadWithDocumentsFactory(ModelFactory[ProjectInfoReadWithDocume
 
 class ProjectReadFactory(ModelFactory[ProjectRead]):
     __model__ = ProjectRead
+
+
+class ProjectInviteReqFactory(ModelFactory[ProjectInviteReq]):
+    __model__ = ProjectInviteReq
