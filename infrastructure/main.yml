@@ -6,6 +6,10 @@ Parameters:
     Type: String
     Description: "Paste the full ARN of your Secrets Manager secret"
 
+  AppSecretArn:
+    Type: String
+    Description: "ARN of the Application secret (JWT, etc.)"
+
   SesSenderEmail:
     Type: String
     Description: "Verified SES email address for sending invitations"
@@ -293,6 +297,7 @@ Resources:
                   - secretsmanager:GetSecretValue
                 Resource:
                   - !Ref DbSecretArn
+                  - !Ref AppSecretArn
 
   ApiTaskRole:
     Type: AWS::IAM::Role
@@ -395,6 +400,8 @@ Resources:
               ValueFrom: !Sub '${DbSecretArn}:username::'
             - Name: APP_CONFIG__DB__PASSWORD
               ValueFrom: !Sub '${DbSecretArn}:password::'
+            - Name: APP_CONFIG__AUTH__SECRET
+              ValueFrom: !Sub '${AppSecretArn}:auth_secret::'
 
   ApiService:
     Type: AWS::ECS::Service
