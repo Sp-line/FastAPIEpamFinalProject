@@ -89,4 +89,5 @@ additional_dependencies = [
     "bcrypt",
     "pyjwt",
     "polyfactory",
+    "aioboto3",
 ]

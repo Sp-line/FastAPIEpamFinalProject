@@ -12,9 +12,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      localstack:
+        condition: service_healthy
+    command: [ "uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
     develop:
       watch:
-        - action: sync+restart
+        - action: sync
           path: ./app
           target: /app/app
         - action: rebuild
@@ -32,10 +35,32 @@ services:
     volumes:
       - pg_data_storage:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
       interval: 5s
       timeout: 3s
       retries: 3
 
+  localstack:
+    image: localstack/localstack:3.7.2
+    container_name: epam_localstack
+    ports:
+      - "127.0.0.1:4566:4566"
+    environment:
+      - EULA=1
+      - DEBUG=1
+      - DISABLE_AUTO_UPGRADE=1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - localstack_data_storage:/var/lib/localstack
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - ./infrastructure/localstack/local-template.yaml:/etc/localstack/init/ready.d/local-template.yaml:ro
+      - ./infrastructure/localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh:ro
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:4566/_localstack/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   pg_data_storage:
+  localstack_data_storage:

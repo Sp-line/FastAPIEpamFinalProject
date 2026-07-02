@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.exceptions.db import ObjectNotFoundError
 from app.repositories.base import RepositoryBase
-from app.repositories.unit_of_work import UnitOfWork
 from app.services.base import ServiceBase
 from tests.support.dummy_model import DummyModel
 
@@ -67,14 +66,6 @@ def mock_repo() -> MagicMock:
     repo.update = AsyncMock()
     repo.delete = AsyncMock()
     return repo
-
-
-@pytest.fixture
-def mock_uow() -> MagicMock:
-    uow = MagicMock(spec=UnitOfWork)
-    uow.__aenter__ = AsyncMock(return_value=uow)
-    uow.__aexit__ = AsyncMock(return_value=None)
-    return uow
 
 
 @pytest.fixture

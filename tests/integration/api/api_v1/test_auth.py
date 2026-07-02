@@ -7,24 +7,21 @@ from fastapi import status
 if TYPE_CHECKING:
     from httpx import AsyncClient
 
-from app.constants.messages.auth import AuthErrorMessage
+from app.constants.messages.authentication import AuthenticationErrorMessage
 from app.constants.messages.db import DBErrorMessage
 
 pytestmark = pytest.mark.requires_db
 
 
-async def test_user_auth_returns_201_on_success(async_client: AsyncClient) -> None:
-    payload = {
-        "username": "api_new_user",
-        "password": "ValidPassword123!",
-    }
-
-    response = await async_client.post("/auth", json=payload)
+async def test_user_auth_returns_201_on_success(
+    async_client: AsyncClient, auth_payload: dict[str, str]
+) -> None:
+    response = await async_client.post("/auth", json=auth_payload)
 
     assert response.status_code == status.HTTP_201_CREATED
 
     data = response.json()
-    assert data["username"] == "api_new_user"
+    assert data["username"] == auth_payload["username"]
     assert "id" in data
     assert "password" not in data
     assert "hashed_password" not in data
@@ -52,36 +49,20 @@ async def test_user_auth_returns_422_on_invalid_schema(
 
 
 async def test_user_auth_returns_409_conflict_on_duplicate_username(
-    async_client: AsyncClient,
+    async_client: AsyncClient, registered_user_payload: dict[str, str]
 ) -> None:
-    payload = {
-        "username": "duplicate_user",
-        "password": "ValidPassword123!",
-    }
-
-    await async_client.post("/auth", json=payload)
-
-    response = await async_client.post("/auth", json=payload)
+    response = await async_client.post("/auth", json=registered_user_payload)
 
     assert response.status_code == status.HTTP_409_CONFLICT
-
-    expected_detail = DBErrorMessage.UNIQUE_FIELD.format(field_name="username")
-    assert response.json()["detail"] == expected_detail
+    assert response.json()["detail"] == DBErrorMessage.UNIQUE_FIELD.format(
+        field_name="username"
+    )
 
 
 async def test_user_login_returns_200_and_token_on_success(
-    async_client: AsyncClient,
+    async_client: AsyncClient, registered_user_payload: dict[str, str]
 ) -> None:
-    await async_client.post(
-        "/auth", json={"username": "login_user", "password": "ValidPassword123!"}
-    )
-
-    form_data = {
-        "username": "login_user",
-        "password": "ValidPassword123!",
-    }
-
-    response = await async_client.post("/login", data=form_data)
+    response = await async_client.post("/login", data=registered_user_payload)
 
     assert response.status_code == status.HTTP_200_OK
 
@@ -92,37 +73,28 @@ async def test_user_login_returns_200_and_token_on_success(
 
 
 async def test_user_login_returns_401_on_invalid_password(
-    async_client: AsyncClient,
+    async_client: AsyncClient, registered_user_payload: dict[str, str]
 ) -> None:
-    await async_client.post(
-        "/auth", json={"username": "real_user", "password": "ValidPassword123!"}
-    )
+    invalid_login_data = {**registered_user_payload, "password": "WrongPassword123!"}
 
-    form_data = {
-        "username": "real_user",
-        "password": "WrongPassword123!",
-    }
-
-    response = await async_client.post("/login", data=form_data)
+    response = await async_client.post("/login", data=invalid_login_data)
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    assert response.json()["detail"] == AuthErrorMessage.INVALID_CREDENTIALS.value
+    assert (
+        response.json()["detail"] == AuthenticationErrorMessage.INVALID_CREDENTIALS.value
+    )
     assert response.headers.get("WWW-Authenticate") == "Bearer"
 
 
 async def test_user_login_returns_401_on_non_existent_user(
-    async_client: AsyncClient,
+    async_client: AsyncClient, auth_payload: dict[str, str]
 ) -> None:
-    form_data = {
-        "username": "ghost_user",
-        "password": "SomePassword123!",
-    }
-
-    response = await async_client.post("/login", data=form_data)
+    response = await async_client.post("/login", data=auth_payload)
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
-    assert response.json()["detail"] == AuthErrorMessage.INVALID_CREDENTIALS.value
+    assert (
+        response.json()["detail"] == AuthenticationErrorMessage.INVALID_CREDENTIALS.value
+    )
     assert response.headers.get("WWW-Authenticate") == "Bearer"
 
 

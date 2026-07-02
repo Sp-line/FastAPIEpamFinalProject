@@ -24,7 +24,7 @@ uq_users_username = ConstraintRule(
 )
 
 check_user_username_min_len = ConstraintRule(
-    name="check_user_username_min_len",
+    name="ck_users_check_user_username_min_len",
     error_code=PostgresErrorCode.CHECK_VIOLATION,
     exception=CheckConstraintError(
         table_name="users",
@@ -33,7 +33,7 @@ check_user_username_min_len = ConstraintRule(
 )
 
 check_user_hashed_password_min_len = ConstraintRule(
-    name="check_user_hashed_password_min_len",
+    name="ck_users_check_user_hashed_password_min_len",
     error_code=PostgresErrorCode.CHECK_VIOLATION,
     exception=CheckConstraintError(
         table_name="users",

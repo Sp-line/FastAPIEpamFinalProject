@@ -45,10 +45,11 @@ class UserService(
         self._password_service = password_service
 
     async def get_by_username(self, username: str) -> UserRead:
-        if not (obj := await self._repository.get_by_username(username)):
-            raise ObjectNotFoundError(
-                conditions={"username": username}, table_name=self._table_name
-            )
+        async with self._uow:
+            if not (obj := await self._repository.get_by_username(username)):
+                raise ObjectNotFoundError(
+                    conditions={"username": username}, table_name=self._table_name
+                )
         return self._read_schema.model_validate(obj)
 
     def _create_data_transfer(self, data: UserCreateReq) -> UserCreateDB:

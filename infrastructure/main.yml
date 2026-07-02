@@ -6,6 +6,10 @@ Parameters:
     Type: String
     Description: "Paste the full ARN of your Secrets Manager secret"
 
+  SesSenderEmail:
+    Type: String
+    Description: "Verified SES email address for sending invitations"
+
 Resources:
   MainVPC:
     Type: AWS::EC2::VPC
@@ -162,7 +166,7 @@ Resources:
     Type: AWS::WAFv2::WebACL
     Properties:
       DefaultAction:
-        Allow: {}
+        Allow: { }
       Scope: REGIONAL
       VisibilityConfig:
         SampledRequestsEnabled: true
@@ -176,7 +180,7 @@ Resources:
               VendorName: AWS
               Name: AWSManagedRulesCommonRuleSet
           OverrideAction:
-            None: {}
+            None: { }
           VisibilityConfig:
             SampledRequestsEnabled: true
             CloudWatchMetricsEnabled: true
@@ -226,6 +230,11 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
+
+  SESIdentity:
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: !Ref SesSenderEmail
 
   ApiLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -309,6 +318,15 @@ Resources:
                 Resource:
                   - !GetAtt ProjectFilesBucket.Arn
                   - !Sub '${ProjectFilesBucket.Arn}/*'
+        - PolicyName: SESEmailAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ses:SendEmail
+                  - ses:SendRawEmail
+                Resource: "*"
 
   ApiCluster:
     Type: AWS::ECS::Cluster
@@ -331,6 +349,8 @@ Resources:
           PortMappings:
             - ContainerPort: 8000
           Environment:
+            - Name: APP_CONFIG__ENV
+              Value: "production"
             - Name: APP_CONFIG__DB__HOST
               Value: !GetAtt PostgreSQLDB.Endpoint.Address
             - Name: APP_CONFIG__DB__PORT
@@ -341,6 +361,12 @@ Resources:
               Value: !Ref ProjectFilesBucket
             - Name: APP_CONFIG__S3__REGION
               Value: !Ref "AWS::Region"
+            - Name: APP_CONFIG__EMAIL__SES__REGION
+              Value: !Ref "AWS::Region"
+            - Name: APP_CONFIG__EMAIL__SES__SENDER
+              Value: !Ref SesSenderEmail
+            - Name: APP_CONFIG__BASE_URL
+              Value: !Sub "http://${ApiLoadBalancer.DNSName}"
           Secrets:
             - Name: APP_CONFIG__DB__USER
               ValueFrom: !Sub '${DbSecretArn}:username::'

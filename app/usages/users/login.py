@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING
 
+from app.core.config import AuthConfig  # noqa: TC001
+
 if TYPE_CHECKING:
     from fastapi.security import OAuth2PasswordRequestForm
 
@@ -7,7 +9,7 @@ from pydantic import SecretStr
 
 from app.core.auth.jwt import JWTService  # noqa: TC001
 from app.core.auth.password import PasswordService  # noqa: TC001
-from app.exceptions.auth import InvalidCredentialsError
+from app.exceptions.authentication import InvalidCredentialsError
 from app.repositories.unit_of_work import UnitOfWork  # noqa: TC001
 from app.repositories.user import UserRepository  # noqa: TC001
 from app.schemas.token import JWTPayload
@@ -21,11 +23,13 @@ class UserLoginUsage:
         unit_of_work: UnitOfWork,
         jwt_service: JWTService,
         password_service: PasswordService,
+        auth_config: AuthConfig,
     ) -> None:
         self._repo = repository
         self._uow = unit_of_work
         self._jwt_service = jwt_service
         self._password_service = password_service
+        self._auth_config = auth_config
 
     async def __call__(self, data: OAuth2PasswordRequestForm) -> Token:
         async with self._uow:
@@ -37,6 +41,9 @@ class UserLoginUsage:
             raise InvalidCredentialsError
 
         token_payload = JWTPayload(sub=str(user.id))
-        access_token = self._jwt_service.create_access_token(payload=token_payload)
+        access_token = self._jwt_service.create_access_token(
+            payload=token_payload,
+            lifetime_seconds=self._auth_config.access_lifetime_seconds,
+        )
 
         return Token(access_token=access_token)

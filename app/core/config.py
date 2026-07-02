@@ -1,13 +1,26 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel
 from pydantic import HttpUrl
 from pydantic import PostgresDsn
 from pydantic import SecretStr
 from pydantic import computed_field
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
 from app.constants.auth import JWTAlgorithm
 from app.constants.db import DBDriver
+from app.constants.env_type import EnvironmentType
+from app.constants.messages.config import ConfigErrorMessage
+
+if TYPE_CHECKING:
+    from typing import Self
+
+BASE_DIR: Path = Path(__file__).resolve().parent.parent
 
 
 class RunConfig(BaseModel):
@@ -18,6 +31,8 @@ class RunConfig(BaseModel):
 class ApiV1Prefix(BaseModel):
     prefix: str = "/v1"
     auth: str = "/auth"
+    projects: str = "/projects"
+    documents: str = "/documents"
 
 
 class ApiPrefix(BaseModel):
@@ -28,10 +43,6 @@ class ApiPrefix(BaseModel):
 class TestDBConfig(BaseModel):
     image: str = "postgres:15-alpine"
     driver: DBDriver = DBDriver.ASYNCPG
-
-
-class TestAPIConfig(BaseModel):
-    base_url: HttpUrl = HttpUrl("http://test")
 
 
 class DatabaseConfig(BaseModel):
@@ -62,24 +73,50 @@ class DatabaseConfig(BaseModel):
 
 
 class S3Config(BaseModel):
+    endpoint_url: HttpUrl | None = None
+    access_key: str | None = None
+    secret_key: str | None = None
     bucket_name: str
     region: str
+
+    presigned_url_expire_seconds: int = 5 * 60
 
 
 class AuthConfig(BaseModel):
     secret: SecretStr
     algorithm: JWTAlgorithm = JWTAlgorithm.HS256
-    lifetime_seconds: int = 60 * 60
+
+    access_lifetime_seconds: int = 60 * 60
+    invite_lifetime_seconds: int = 60 * 60 * 72
+
+
+class SESMailConfig(BaseModel):
+    region: str
+    sender: str
+    endpoint_url: HttpUrl | None = None
+    access_key: str | None = None
+    secret_key: str | None = None
+
+
+class EmailConfig(BaseModel):
+    ses: SESMailConfig
+
+
+class TemplateConfig(BaseModel):
+    path: Path = BASE_DIR / "templates"
 
 
 class Settings(BaseSettings):
+    base_url: HttpUrl
+    env: EnvironmentType = EnvironmentType.LOCAL
     run: RunConfig = RunConfig()
     api: ApiPrefix = ApiPrefix()
     test_db: TestDBConfig = TestDBConfig()
-    test_api: TestAPIConfig = TestAPIConfig()
+    template: TemplateConfig = TemplateConfig()
     db: DatabaseConfig
     s3: S3Config
     auth: AuthConfig
+    email: EmailConfig
 
     model_config = SettingsConfigDict(
         env_file=("app/.env.template", "app/.env"),
@@ -88,6 +125,39 @@ class Settings(BaseSettings):
         env_prefix="APP_CONFIG__",
         extra="ignore",
     )
+
+    @model_validator(mode="after")
+    def validate_s3_credentials_for_env(self) -> Self:
+        env_depends_on_localstack = self.env in {
+            EnvironmentType.LOCAL,
+            EnvironmentType.TEST,
+        }
+        missing_credentials = not all(
+            [self.s3.access_key, self.s3.secret_key, self.s3.endpoint_url]
+        )
+
+        if env_depends_on_localstack and missing_credentials:
+            raise ValueError(ConfigErrorMessage.LOCAL_S3_MISSING_CREDENTIALS)
+        return self
+
+    @model_validator(mode="after")
+    def validate_email_credentials_for_env(self) -> Self:
+        env_depends_on_localstack = self.env in {
+            EnvironmentType.LOCAL,
+            EnvironmentType.TEST,
+        }
+        missing_credentials = not all(
+            [
+                self.email.ses.access_key,
+                self.email.ses.secret_key,
+                self.email.ses.endpoint_url,
+            ]
+        )
+
+        if env_depends_on_localstack and missing_credentials:
+            raise ValueError(ConfigErrorMessage.LOCAL_SES_MISSING_CREDENTIALS)
+
+        return self
 
 
 settings = Settings()

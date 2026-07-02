@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'LocalStack Infrastructure: S3'
+
+Parameters:
+  BucketName:
+    Type: String
+    Default: epam-local-bucket
+
+Resources:
+  ProjectFilesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+Outputs:
+  S3BucketName:
+    Value: !Ref ProjectFilesBucket

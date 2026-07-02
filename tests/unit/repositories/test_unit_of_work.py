@@ -1,32 +1,43 @@
-from unittest.mock import AsyncMock
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import pytest
 
-from app.repositories.unit_of_work import UnitOfWork
+if TYPE_CHECKING:
+    from unittest.mock import AsyncMock
+
+    from app.repositories.unit_of_work import UnitOfWork
 
 
-class DummyTestError(Exception):
-    pass
+async def test_aenter_returns_unit_of_work_instance(
+    real_uow: UnitOfWork,
+) -> None:
+    async with real_uow as uow:
+        assert uow is real_uow
 
 
-async def test_unit_of_work_commits_on_successful_execution() -> None:
-    mock_session = AsyncMock()
-    uow = UnitOfWork(session=mock_session)
-
-    async with uow:
+async def test_aexit_commits_transaction_when_no_exception_raised(
+    real_uow: UnitOfWork,
+    mock_session: AsyncMock,
+) -> None:
+    async with real_uow:
         pass
 
-    mock_session.commit.assert_awaited_once()
-    mock_session.rollback.assert_not_awaited()
+    mock_session.commit.assert_called_once()
+    mock_session.rollback.assert_not_called()
 
 
-async def test_unit_of_work_rolls_back_on_exception() -> None:
-    mock_session = AsyncMock()
-    uow = UnitOfWork(session=mock_session)
+async def test_aexit_rolls_back_transaction_when_exception_raised(
+    real_uow: UnitOfWork,
+    mock_session: AsyncMock,
+) -> None:
+    msg = "Test error"
+    error = ValueError(msg)
 
-    with pytest.raises(DummyTestError):
-        async with uow:
-            raise DummyTestError
+    with pytest.raises(ValueError, match=msg):
+        async with real_uow:
+            raise error
 
-    mock_session.rollback.assert_awaited_once()
-    mock_session.commit.assert_not_awaited()
+    mock_session.rollback.assert_called_once()
+    mock_session.commit.assert_not_called()

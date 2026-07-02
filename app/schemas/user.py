@@ -17,12 +17,18 @@ type PasswordStr = Annotated[
     Field(min_length=UserLimits.PASSWORD_MIN, max_length=UserLimits.PASSWORD_MAX),
     AfterValidator(validate_password_strength),
 ]
+type Username = Annotated[
+    str, MinLen(UserLimits.USERNAME_MIN), MaxLen(UserLimits.USERNAME_MAX)
+]
+type HashedPassword = Annotated[
+    str,
+    MinLen(UserLimits.HASHED_PASSWORD_MIN),
+    MaxLen(UserLimits.HASHED_PASSWORD_MAX),
+]
 
 
 class UserBase(BaseModel):
-    username: Annotated[
-        str, MinLen(UserLimits.USERNAME_MIN), MaxLen(UserLimits.USERNAME_MAX)
-    ]
+    username: Username
 
 
 class UserCreateReq(UserBase):
@@ -30,11 +36,7 @@ class UserCreateReq(UserBase):
 
 
 class UserCreateDB(UserBase):
-    hashed_password: Annotated[
-        str,
-        MinLen(UserLimits.HASHED_PASSWORD_MIN),
-        MaxLen(UserLimits.HASHED_PASSWORD_MAX),
-    ]
+    hashed_password: HashedPassword
 
 
 class UserRead(UserBase, Id):
@@ -42,9 +44,7 @@ class UserRead(UserBase, Id):
 
 
 class UserUpdateBase(BaseModel):
-    username: Annotated[
-        str | None, MinLen(UserLimits.USERNAME_MIN), MaxLen(UserLimits.USERNAME_MAX)
-    ] = None
+    username: Username | None = None
 
 
 class UserUpdateReq(UserUpdateBase):
@@ -52,8 +52,4 @@ class UserUpdateReq(UserUpdateBase):
 
 
 class UserUpdateDB(UserUpdateBase):
-    hashed_password: Annotated[
-        str | None,
-        MinLen(UserLimits.HASHED_PASSWORD_MIN),
-        MaxLen(UserLimits.HASHED_PASSWORD_MAX),
-    ] = None
+    hashed_password: HashedPassword | None = None
