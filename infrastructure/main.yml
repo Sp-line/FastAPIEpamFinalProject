@@ -262,7 +262,7 @@ Resources:
       Port: 8000
       Protocol: HTTP
       TargetType: ip
-      HealthCheckPath: /docs
+      HealthCheckPath: /api/v1/health
       HealthCheckIntervalSeconds: 30
 
   ApiListener:
