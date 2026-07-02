@@ -11,6 +11,7 @@ from app.usages.documents.retrieve import DocumentRetrieveUsage
 from app.usages.projects.create import ProjectCreateUsage
 from app.usages.projects.delete import ProjectDeleteUsage
 from app.usages.projects.invite import ProjectInviteUsage
+from app.usages.projects.join import ProjectJoinUsage
 from app.usages.projects.list import ProjectListInfoUsage
 from app.usages.projects.retrieve import ProjectRetrieveInfoUsage
 from app.usages.projects.share import ProjectShareUsage
@@ -215,4 +216,19 @@ def project_share_usage(  # noqa: PLR0913
         email_service=mock_email_service,
         url_builder=mock_url_builder,
         auth_config=auth_config,
+    )
+
+
+@pytest.fixture
+def project_join_usage(
+    mock_uow: AsyncMock,
+    mock_jwt_service: MagicMock,
+    mock_project_repo: AsyncMock,
+    mock_project_member_repo: AsyncMock,
+) -> ProjectJoinUsage:
+    return ProjectJoinUsage(
+        unit_of_work=mock_uow,
+        jwt_service=mock_jwt_service,
+        repository=mock_project_repo,
+        project_member_repo=mock_project_member_repo,
     )
