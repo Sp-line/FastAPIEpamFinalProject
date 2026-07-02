@@ -27,12 +27,14 @@ jobs:
       - name: Deploy to AWS CloudFormation
         run: |
           echo "Create or update infrastructure..."
-          
+
           aws cloudformation deploy \
             --template-file infrastructure/main.yml \
             --stack-name epam-prod-stack \
-            --parameter-overrides DbSecretArn=${{ secrets.DB_SECRET_ARN }} \
+            --parameter-overrides \
+              DbSecretArn=${{ secrets.DB_SECRET_ARN }} \
+              SesSenderEmail=${{ secrets.SES_SENDER_EMAIL }} \
             --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
             --no-fail-on-empty-changeset
-            
+
           echo "Infrastructure successfully updated!"
