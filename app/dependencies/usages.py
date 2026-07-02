@@ -10,8 +10,10 @@ from app.usages.documents.update import DocumentUpdateUsage
 from app.usages.projects.create import ProjectCreateUsage
 from app.usages.projects.delete import ProjectDeleteUsage
 from app.usages.projects.invite import ProjectInviteUsage
+from app.usages.projects.join import ProjectJoinUsage
 from app.usages.projects.list import ProjectListInfoUsage
 from app.usages.projects.retrieve import ProjectRetrieveInfoUsage
+from app.usages.projects.share import ProjectShareUsage
 from app.usages.projects.update import ProjectUpdateUsage
 from app.usages.users.login import UserLoginUsage
 
@@ -27,6 +29,8 @@ class UsagesProvider(Provider):
     get_project_retrieve_info_usage = provide(ProjectRetrieveInfoUsage)
     get_project_list_info_usage = provide(ProjectListInfoUsage)
     get_project_invite_usage = provide(ProjectInviteUsage)
+    get_project_share_usage = provide(ProjectShareUsage)
+    get_project_join_usage = provide(ProjectJoinUsage)
 
     get_document_create_usage = provide(DocumentCreateUsage)
     get_document_delete_usage = provide(DocumentDeleteUsage)
