@@ -5,6 +5,7 @@ from app.schemas.project import ProjectCreateReq
 from app.schemas.project import ProjectInfoReadWithDocuments
 from app.schemas.project import ProjectInviteReq
 from app.schemas.project import ProjectRead
+from app.schemas.project import ProjectShareReq
 from app.schemas.project import ProjectUpdateDB
 from app.schemas.project import ProjectUpdateReq
 
@@ -35,3 +36,7 @@ class ProjectReadFactory(ModelFactory[ProjectRead]):
 
 class ProjectInviteReqFactory(ModelFactory[ProjectInviteReq]):
     __model__ = ProjectInviteReq
+
+
+class ProjectShareReqFactory(ModelFactory[ProjectShareReq]):
+    __model__ = ProjectShareReq

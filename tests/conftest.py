@@ -11,6 +11,7 @@ pytest_plugins = [
     "tests.unit.fixtures.repos",
     "tests.unit.fixtures.storage",
     "tests.unit.fixtures.domains",
+    "tests.unit.fixtures.utils",
     "tests.unit.fixtures.services",
     "tests.unit.fixtures.usages",
 ]

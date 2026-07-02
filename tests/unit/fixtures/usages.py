@@ -13,6 +13,7 @@ from app.usages.projects.delete import ProjectDeleteUsage
 from app.usages.projects.invite import ProjectInviteUsage
 from app.usages.projects.list import ProjectListInfoUsage
 from app.usages.projects.retrieve import ProjectRetrieveInfoUsage
+from app.usages.projects.share import ProjectShareUsage
 from app.usages.projects.update import ProjectUpdateUsage
 from app.usages.users.login import UserLoginUsage
 
@@ -193,4 +194,25 @@ def document_retrieve_usage(  # noqa: PLR0913
         s3_storage=mock_s3_storage,
         ensure_can_retrieve_document=mock_ensure_can_retrieve_document,
         s3_config=s3_config,
+    )
+
+
+@pytest.fixture
+def project_share_usage(  # noqa: PLR0913
+    mock_uow: AsyncMock,
+    mock_project_member_repo: AsyncMock,
+    mock_ensure_can_invite_user: MagicMock,
+    mock_jwt_service: MagicMock,
+    mock_email_service: AsyncMock,
+    mock_url_builder: MagicMock,
+    auth_config: AuthConfig,
+) -> ProjectShareUsage:
+    return ProjectShareUsage(
+        unit_of_work=mock_uow,
+        project_member_repo=mock_project_member_repo,
+        ensure_can_invite=mock_ensure_can_invite_user,
+        jwt_service=mock_jwt_service,
+        email_service=mock_email_service,
+        url_builder=mock_url_builder,
+        auth_config=auth_config,
     )

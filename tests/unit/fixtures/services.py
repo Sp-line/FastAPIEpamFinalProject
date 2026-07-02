@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from app.core.auth.jwt import JWTService
+from app.mail.base import EmailService
 from app.services.user import UserService
 
 
@@ -32,3 +33,8 @@ def user_service(
         unit_of_work=mock_uow,
         password_service=mock_password_service,
     )
+
+
+@pytest.fixture
+def mock_email_service() -> AsyncMock:
+    return AsyncMock(spec=EmailService)
