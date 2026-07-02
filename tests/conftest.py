@@ -2,6 +2,7 @@ pytest_plugins = [
     "tests.fixtures.db",
     "tests.fixtures.client",
     "tests.fixtures.auth",
+    "tests.fixtures.config",
     "tests.fixtures.core_mocks",
     "tests.integration.fixtures.user",
     "tests.integration.fixtures.project",

@@ -13,6 +13,7 @@ from types_aiobotocore_ses import SESClient  # noqa: TC002
 
 from app.constants.env_type import EnvironmentType
 from app.core.config import AuthConfig
+from app.core.config import S3Config
 from app.core.config import settings
 from app.core.models.db import Database
 from app.storage.key import DocumentKeyStrategy
@@ -21,6 +22,10 @@ from app.utils.url import UrlBuilder
 
 
 class InfrastructureProvider(Provider):
+    @provide(scope=Scope.APP)
+    def provide_s3_config(self) -> S3Config:
+        return settings.s3
+
     @provide(scope=Scope.APP)
     def provide_auth_config(self) -> AuthConfig:
         return settings.auth

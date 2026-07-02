@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
     from app.core.config import AuthConfig
+    from app.core.config import S3Config
 
 
 @pytest.fixture
@@ -177,12 +178,13 @@ def document_delete_usage(
 
 
 @pytest.fixture
-def document_retrieve_usage(
+def document_retrieve_usage(  # noqa: PLR0913
     mock_document_repo: AsyncMock,
     mock_project_member_repo: AsyncMock,
     mock_uow: AsyncMock,
     mock_s3_storage: AsyncMock,
     mock_ensure_can_retrieve_document: MagicMock,
+    s3_config: S3Config,
 ) -> DocumentRetrieveUsage:
     return DocumentRetrieveUsage(
         repository=mock_document_repo,
@@ -190,4 +192,5 @@ def document_retrieve_usage(
         unit_of_work=mock_uow,
         s3_storage=mock_s3_storage,
         ensure_can_retrieve_document=mock_ensure_can_retrieve_document,
+        s3_config=s3_config,
     )
