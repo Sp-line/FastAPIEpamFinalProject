@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pydantic import PositiveInt
 
-from app.constants import RoleType
+from app.constants.role_type import RoleType
 from app.repositories.project import ProjectRepository  # noqa: TC001
 from app.repositories.project_member import (
     ProjectMemberAssociationRepository,  # noqa: TC001
