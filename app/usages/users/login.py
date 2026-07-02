@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from core.config import settings
+from app.core.config import AuthConfig  # noqa: TC001
 
 if TYPE_CHECKING:
     from fastapi.security import OAuth2PasswordRequestForm
@@ -23,11 +23,13 @@ class UserLoginUsage:
         unit_of_work: UnitOfWork,
         jwt_service: JWTService,
         password_service: PasswordService,
+        auth_config: AuthConfig,
     ) -> None:
         self._repo = repository
         self._uow = unit_of_work
         self._jwt_service = jwt_service
         self._password_service = password_service
+        self._auth_config = auth_config
 
     async def __call__(self, data: OAuth2PasswordRequestForm) -> Token:
         async with self._uow:
@@ -41,7 +43,7 @@ class UserLoginUsage:
         token_payload = JWTPayload(sub=str(user.id))
         access_token = self._jwt_service.create_access_token(
             payload=token_payload,
-            lifetime_seconds=settings.auth.access_lifetime_seconds,
+            lifetime_seconds=self._auth_config.access_lifetime_seconds,
         )
 
         return Token(access_token=access_token)

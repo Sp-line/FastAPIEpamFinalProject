@@ -20,6 +20,8 @@ if TYPE_CHECKING:
     from unittest.mock import AsyncMock
     from unittest.mock import MagicMock
 
+    from app.core.config import AuthConfig
+
 
 @pytest.fixture
 def form_data() -> OAuth2PasswordRequestForm:
@@ -39,12 +41,14 @@ def login_use_case(
     mock_uow: AsyncMock,
     mock_jwt_service: MagicMock,
     mock_password_service: MagicMock,
+    auth_config: AuthConfig,
 ) -> UserLoginUsage:
     return UserLoginUsage(
         repository=mock_user_repo,
         unit_of_work=mock_uow,
         jwt_service=mock_jwt_service,
         password_service=mock_password_service,
+        auth_config=auth_config,
     )
 
 
