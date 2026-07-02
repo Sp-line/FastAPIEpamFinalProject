@@ -13,13 +13,16 @@ from app.schemas.project import ProjectCreateReq  # noqa: TC001
 from app.schemas.project import ProjectInfoReadWithDocuments  # noqa: TC001
 from app.schemas.project import ProjectInviteReq  # noqa: TC001
 from app.schemas.project import ProjectRead  # noqa: TC001
+from app.schemas.project import ProjectShareReq  # noqa: TC001
 from app.schemas.project import ProjectUpdateReq  # noqa: TC001
 from app.schemas.project_member import ProjectMemberRead  # noqa: TC001
 from app.usages.projects.create import ProjectCreateUsage  # noqa: TC001
 from app.usages.projects.delete import ProjectDeleteUsage  # noqa: TC001
 from app.usages.projects.invite import ProjectInviteUsage  # noqa: TC001
+from app.usages.projects.join import ProjectJoinUsage  # noqa: TC001
 from app.usages.projects.list import ProjectListInfoUsage  # noqa: TC001
 from app.usages.projects.retrieve import ProjectRetrieveInfoUsage  # noqa: TC001
+from app.usages.projects.share import ProjectShareUsage  # noqa: TC001
 from app.usages.projects.update import ProjectUpdateUsage  # noqa: TC001
 
 router = APIRouter(route_class=DishkaRoute, prefix=settings.api.v1.projects)
@@ -93,3 +96,27 @@ async def list_project_info(
     current_user_id: Annotated[PositiveInt, Depends(get_current_user_id)],
 ) -> list[ProjectInfoReadWithDocuments]:
     return await project_list_info_usage(current_user_id)
+
+
+@router.post(
+    "/{project_id}/share",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def share_project(
+    project_id: PositiveInt,
+    data: ProjectShareReq,
+    current_user_id: Annotated[PositiveInt, Depends(get_current_user_id)],
+    project_share_usage: FromDishka[ProjectShareUsage],
+) -> None:
+    await project_share_usage(project_id, data, current_user_id)
+
+
+@router.get(
+    "/join",
+)
+async def join_project(
+    token: str,
+    current_user_id: Annotated[PositiveInt, Depends(get_current_user_id)],
+    project_join_usage: FromDishka[ProjectJoinUsage],
+) -> ProjectMemberRead:
+    return await project_join_usage(token, current_user_id)
