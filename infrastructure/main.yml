@@ -327,11 +327,28 @@ Resources:
                   - ses:SendEmail
                   - ses:SendRawEmail
                 Resource: "*"
+        - PolicyName: CloudWatchLogsAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !GetAtt ApiLogGroup.Arn
 
   ApiCluster:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: epam-prod-cluster
+
+  ApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      LogGroupName: /ecs/epam-prod-api
+      RetentionInDays: 14
 
   ApiTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -348,6 +365,12 @@ Resources:
           Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/epampass/api:latest'
           PortMappings:
             - ContainerPort: 8000
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref ApiLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: fastapi
           Environment:
             - Name: APP_CONFIG__ENV
               Value: "production"
